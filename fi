@@ -27,13 +27,17 @@ Dropdown.__index = Dropdown
 function Dropdown.new(parent, y, title, items, cb)
     local self = setmetatable({Open=false, Items=items, CB=cb}, Dropdown)
     C("TextLabel", {Parent=parent, Size=U2(0,120,0,20), Position=U2(0,20,0,y), BackgroundTransparency=1, Text=title, TextColor3=C3(80,80,80), Font=F_GM, TextSize=12, TextXAlignment=0})
-    self.Btn = C("TextButton", {Parent=parent, Size=U2(1,-40,0,30), Position=U2(0,20,0,y+22), BackgroundColor3=C3(255,255,255), Text="  Select...", TextColor3=C3(50,50,50), Font=F_G, TextSize=13, TextXAlignment=0, ZIndex=2, C("UICorner",{CornerRadius=UDim.new(0,6)}), C("UIStroke",{Color=C3(210,210,210)}), Click=function() self:Toggle() end})
+    self.Btn = C("TextButton", {Parent=parent, Size=U2(1,-40,0,30), Position=U2(0,20,0,y+20), BackgroundColor3=C3(255,255,255), Text="  Select...", TextColor3=C3(50,50,50), Font=F_G, TextSize=13, TextXAlignment=0, ZIndex=2, C("UICorner",{CornerRadius=UDim.new(0,6)}), C("UIStroke",{Color=C3(210,210,210)}), Click=function() self:Toggle() end})
     self.Arrow = C("TextLabel", {Parent=self.Btn, Size=U2(0,20,1,0), Position=U2(1,-25,0,0), BackgroundTransparency=1, Text="▼", TextColor3=C3(150,150,150), Font=F_G, TextSize=10, ZIndex=2})
-    self.Scroll = C("ScrollingFrame", {Parent=parent, Size=U2(1,-40,0,100), Position=U2(0,20,0,y+55), BackgroundColor3=C3(255,255,255), BorderSizePixel=0, ScrollBarThickness=4, Visible=false, ZIndex=5, C("UICorner",{CornerRadius=UDim.new(0,6)}), C("UIStroke",{Color=C3(210,210,210)}), C("UIListLayout")})
+    self.Scroll = C("ScrollingFrame", {Parent=parent, Size=U2(1,-40,0,100), Position=U2(0,20,0,y+53), BackgroundColor3=C3(255,255,255), BorderSizePixel=0, ScrollBarThickness=4, Visible=false, ZIndex=5, C("UICorner",{CornerRadius=UDim.new(0,6)}), C("UIStroke",{Color=C3(210,210,210)}), C("UIListLayout")})
     self:Render()
     return self
 end
-function Dropdown:Toggle() self.Open = not self.Open; self.Scroll.Visible = self.Open; self.Arrow.Text = self.Open and "▲" or "▼" end
+function Dropdown:Toggle() 
+    self.Open = not self.Open;
+    self.Scroll.Visible = self.Open; 
+    self.Arrow.Text = self.Open and "▲" or "▼" 
+end
 function Dropdown:Render(nItems)
     if nItems then self.Items = nItems end
     for _, c in pairs(self.Scroll:GetChildren()) do if c:IsA("TextButton") then c:Destroy() end end
@@ -58,7 +62,8 @@ UI.CC = C("Frame", {Parent=UI.MF, Size=U2(1,0,1,-70), Position=U2(0,0,0,70), Bac
 function UI:AddTab(name, pos, active)
     local btn = C("TextButton", {Parent=self.TabC, Size=U2(0.25,0,1,0), Position=pos, BackgroundTransparency=active and 0 or 1, BackgroundColor3=C3(255,255,255), Text=name, TextColor3=active and C3(50,50,50) or C3(120,120,120), Font=F_GM, TextSize=10, C("UICorner",{CornerRadius=UDim.new(0,6)})})
     local frm = C("Frame", {Parent=self.CC, Size=U2(1,0,1,0), BackgroundTransparency=1, Visible=active})
-    table.insert(self.Tabs, btn); table.insert(self.Frames, frm)
+    table.insert(self.Tabs, btn)
+    table.insert(self.Frames, frm)
     btn.MouseButton1Click:Connect(function()
         for i, t in ipairs(self.Tabs) do t.BackgroundTransparency=1; t.TextColor3=C3(120,120,120); self.Frames[i].Visible=false end
         btn.BackgroundTransparency=0; btn.TextColor3=C3(50,50,50); frm.Visible=true
@@ -75,7 +80,12 @@ C("TextLabel", {Parent=Leaderboard.Frm, Size=U2(0,150,0,20), Position=U2(0,20,0,
 Leaderboard.BtnSort = C("TextButton", {Parent=Leaderboard.Frm, Size=U2(0,80,0,18), Position=U2(1,-100,0,65), BackgroundColor3=C3(220,220,220), Text="Sort: Coin", TextColor3=C3(80,80,80), Font=F_G, TextSize=11, C("UICorner",{CornerRadius=UDim.new(0,4)}), Click=function() Leaderboard.Sort = Leaderboard.Sort=="Val" and "Name" or "Val"; Leaderboard.BtnSort.Text = "Sort: "..(Leaderboard.Sort=="Val" and "Coin" or "Name"); Leaderboard:Update() end})
 Leaderboard.Scroll = C("ScrollingFrame", {Parent=Leaderboard.Frm, Size=U2(1,-40,1,-95), Position=U2(0,20,0,85), BackgroundColor3=C3(255,255,255), BorderSizePixel=0, ScrollBarThickness=4, C("UICorner",{CornerRadius=UDim.new(0,8)}), C("UIStroke",{Color=C3(220,220,220)}), C("UIListLayout",{Padding=UDim.new(0,2)})})
 
-function Leaderboard:Fmt(n) local x=tonumber(n); if not x then return tostring(n) end return x>=1e9 and string.format("%.1fB",x/1e9):gsub("%.0","") or (x>=1e6 and string.format("%.1fM",x/1e6):gsub("%.0","") or (x>=1e3 and string.format("%.1fk",x/1e3):gsub("%.0","") or tostring(x))) end
+function Leaderboard:Fmt(n) 
+    local x=tonumber(n)
+    if not x then return tostring(n) end 
+    return x>=1e9 and string.format("%.1fB",x/1e9):gsub("%.0","") or (x>=1e6 and string.format("%.1fM",x/1e6):gsub("%.0","") or (x>=1e3 and string.format("%.1fk",x/1e3):gsub("%.0","") or tostring(x))) 
+end
+
 function Leaderboard:Update()
     for _,c in pairs(self.Scroll:GetChildren()) do if c:IsA("Frame") then c:Destroy() end end
     local pd = {}
@@ -100,7 +110,11 @@ function Leaderboard:Update()
 end
 
 local FishBot = { Frm = UI:AddTab("Auto Fish", U2(0.25,0,0,0), false), Active = false, Rod = nil, Caught = 0, Delay = 1.8, Dist = 20 }
-local function MkInp(frm, y, txt, def, cb) C("TextLabel", {Parent=frm, Size=U2(0,120,0,25), Position=U2(0,20,0,y), BackgroundTransparency=1, Text=txt, TextColor3=C3(80,80,80), Font=F_G, TextSize=13, TextXAlignment=0}); return C("TextBox", {Parent=frm, Size=U2(0,150,0,25), Position=U2(1,-170,0,y), BackgroundColor3=C3(255,255,255), Text=def, TextColor3=C3(50,50,50), Font=F_G, TextSize=13, C("UICorner",{CornerRadius=UDim.new(0,6)}), C("UIStroke",{Color=C3(210,210,210)}), Focus=cb}) end
+local function MkInp(frm, y, txt, def, cb) 
+    C("TextLabel", {Parent=frm, Size=U2(0,120,0,25), Position=U2(0,20,0,y), BackgroundTransparency=1, Text=txt, TextColor3=C3(80,80,80), Font=F_G, TextSize=13, TextXAlignment=0});
+    return C("TextBox", {Parent=frm, Size=U2(0,150,0,25), Position=U2(1,-170,0,y), BackgroundColor3=C3(255,255,255), Text=def, TextColor3=C3(50,50,50), Font=F_G, TextSize=13, C("UICorner",{CornerRadius=UDim.new(0,6)}), C("UIStroke",{Color=C3(210,210,210)}), Focus=cb}) 
+end
+
 FishBot.TxtDly = MkInp(FishBot.Frm, 10, "Cast Delay (s):", "1.8", function(b) FishBot.Delay = tonumber(b.Text) or 1.8; b.Text=tostring(FishBot.Delay) end)
 C("TextLabel", {Parent=FishBot.Frm, Size=U2(1,-40,0,15), Position=U2(0,20,0,37), BackgroundTransparency=1, Text="Recommended: 1.8s (Safe from Anti-Cheat)", TextColor3=C3(255,149,0), Font=F_G, TextSize=10, TextXAlignment=0})
 FishBot.TxtDist = MkInp(FishBot.Frm, 60, "Distance (studs):", "20", function(b) FishBot.Dist = tonumber(b.Text) or 20; b.Text=tostring(FishBot.Dist) end)
@@ -109,9 +123,16 @@ FishBot.LblRod = C("TextLabel", {Parent=FishBot.Frm, Size=U2(0,150,0,25), Positi
 FishBot.Btn = C("TextButton", {Parent=FishBot.Frm, Size=U2(0,320,0,40), Position=U2(0.5,-160,0,145), BackgroundColor3=C3(180,180,180), Text="Lock: Equip Rod", TextColor3=C3(255,255,255), Font=F_GM, TextSize=14, AutoButtonColor=false, C("UICorner",{CornerRadius=UDim.new(0,8)}), Click=function() FishBot:Start() end})
 FishBot.Notif = C("TextLabel", {Parent=FishBot.Frm, Size=U2(1,0,0,20), Position=U2(0,0,0,200), BackgroundTransparency=1, Text="", TextColor3=C3(52,199,89), Font=F_GM, TextSize=12, TextTransparency=1})
 
-function FishBot:ShowMsg(msg, col) self.Notif.Text=msg; self.Notif.TextColor3=col or C3(52,199,89); TS:Create(self.Notif,TweenInfo.new(0.2),{TextTransparency=0}):Play(); task.delay(0.7, function() TS:Create(self.Notif,TweenInfo.new(0.5),{TextTransparency=1}):Play() end) end
+function FishBot:ShowMsg(msg, col) 
+    self.Notif.Text=msg; 
+    self.Notif.TextColor3=col or C3(52,199,89); 
+    TS:Create(self.Notif,TweenInfo.new(0.2),{TextTransparency=0}):Play();
+    task.delay(0.7, function() TS:Create(self.Notif,TweenInfo.new(0.5),{TextTransparency=1}):Play() end) 
+end
+
 function FishBot:Start()
-    if not self.Rod then return end; self.Active = not self.Active
+    if not self.Rod then return end;
+    self.Active = not self.Active
     self.Btn.Text = self.Active and "Stop Fishing" or "Start Fishing"
     self.Btn.BackgroundColor3 = self.Active and C3(255,59,48) or C3(0,122,255)
     if self.Active then task.spawn(function() while self.Active and self.Rod do self:Loop(); task.wait(self.Delay) end end) end
@@ -133,14 +154,27 @@ function FishBot:Loop()
 
         local equippedRod = c:FindFirstChild(self.Rod)
         if not equippedRod then return end
-
-        FS["RE/CastReplication"]:FireServer(tp, h.Position, self.Rod, 100, nil, nil)
+        
+        FS["RE/CastReplication"]:FireServer(
+            tp,
+            h.Position,
+            self.Rod,
+            93.524731248617,
+            nil,
+            "Corruption Crystal"
+        )
         
         task.wait(math.random(15, 25) / 10)
         
         if not c:FindFirstChild(self.Rod) then return end
 
-        local d = FS["RF/RollFishServer"]:InvokeServer(self.Rod, 1)
+        local d = FS["RF/RollFishServer"]:InvokeServer(self.Rod, 0)
+        
+        pcall(function()
+            local AbilityEvent = FS.AbilityRemotes.NotifyAbilityCast
+            AbilityEvent:FireServer()
+        end)
+        
         if d then
             if type(d) == "string" then 
                 res = "Caught: " .. d 
@@ -157,9 +191,6 @@ function FishBot:Loop()
         FS["RE/CleanupCast"]:FireServer()
         task.wait(0.1)
         
-        FS["RE/ReplicateExclaim"]:FireServer("Uncommon")
-        task.wait(0.1)
-        
         FS["RE/FishGiver"]:FireServer({hookPosition = tp})
         task.wait(0.2)
         
@@ -173,29 +204,136 @@ function FishBot:Loop()
     end
 end
 
-local Teleporter = { Frm = UI:AddTab("Teleport", U2(0.5,0,0,0), false), S_Isl=nil, S_Plr=nil }
-function Teleporter:TP(pos) local c=P.Character; local h=c and c:FindFirstChild("HumanoidRootPart"); if h then h.CFrame=CFrame.new(pos)+Vector3.new(0,5,0) end end
-function Teleporter:GetPlr() local l={}; for _,p in ipairs(game.Players:GetPlayers()) do if p~=P then table.insert(l,{name=p.DisplayName, val=p}) end end; return l end
-Dropdown.new(Teleporter.Frm, 10, "Select Island", {{name="Christmas Island", val=Vector3.new(269,239,40)}, {name="Fisherman Island", val=Vector3.new(-412.2,243.1,-41.2)}, {name="Mythical Island", val=Vector3.new(-590.4,243.0,-1394.1)}, {name="Verdant Isle", val=Vector3.new(519.4,239.9,-1030.2)}}, function(v) Teleporter.S_Isl = v end)
-C("TextButton", {Parent=Teleporter.Frm, Size=U2(1,-40,0,30), Position=U2(0,20,0,70), BackgroundColor3=C3(0,122,255), Text="Teleport to Island", TextColor3=C3(255,255,255), Font=F_GM, TextSize=13, ZIndex=1, C("UICorner",{CornerRadius=UDim.new(0,6)}), Click=function() if Teleporter.S_Isl then Teleporter:TP(Teleporter.S_Isl) end end})
-Teleporter.PlrDrop = Dropdown.new(Teleporter.Frm, 120, "Select Player", Teleporter:GetPlr(), function(v) Teleporter.S_Plr = v end)
-C("TextButton", {Parent=Teleporter.Frm, Size=U2(0,60,0,20), Position=U2(1,-80,0,120), BackgroundColor3=C3(0,122,255), Text="Refresh", TextColor3=C3(255,255,255), Font=F_GM, TextSize=11, C("UICorner",{CornerRadius=UDim.new(0,4)}), Click=function() Teleporter.PlrDrop:Render(Teleporter:GetPlr()); Teleporter.PlrDrop:Reset(); Teleporter.S_Plr=nil end})
-C("TextButton", {Parent=Teleporter.Frm, Size=U2(1,-40,0,30), Position=U2(0,20,0,180), BackgroundColor3=C3(0,122,255), Text="Teleport to Player", TextColor3=C3(255,255,255), Font=F_GM, TextSize=13, ZIndex=1, C("UICorner",{CornerRadius=UDim.new(0,6)}), Click=function() if Teleporter.S_Plr and Teleporter.S_Plr.Character and Teleporter.S_Plr.Character:FindFirstChild("HumanoidRootPart") then Teleporter:TP(Teleporter.S_Plr.Character.HumanoidRootPart.Position) end end})
+local Teleporter = { 
+    Frm = UI:AddTab("Teleport", U2(0.5,0,0,0), false), 
+    S_Isl=nil, S_Evt=nil, S_Plr=nil, 
+    EventPlat = C("Part",{Parent=workspace,Size=Vector3.new(30,1,30),Anchored=true,Transparency=1,CanCollide=false}) 
+}
 
-local MiscTools = { Frm = UI:AddTab("Misc", U2(0.75,0,0,0), false), AFK=false, SW=false, SWPart=C("Part",{Parent=workspace,Size=Vector3.new(15,1,15),Anchored=true,Transparency=0.5,CanCollide=false}) }
-local function MkTgl(y, txt, cb) local s=false; local b=C("TextButton",{Parent=MiscTools.Frm, Size=U2(1,-40,0,35), Position=U2(0,20,0,y), BackgroundColor3=C3(220,220,220), Text=txt.." [OFF]", TextColor3=C3(80,80,80), Font=F_GM, TextSize=13, C("UICorner",{CornerRadius=UDim.new(0,6)})}); b.MouseButton1Click:Connect(function() s=not s; b.Text=txt..(s and" [ON]"or" [OFF]"); b.BackgroundColor3=s and C3(0,122,255) or C3(220,220,220); b.TextColor3=s and C3(255,255,255) or C3(80,80,80); cb(s) end) end
-MkTgl(20, "Anti AFK", function(v) MiscTools.AFK=v end); P.Idled:Connect(function() if MiscTools.AFK then VU:CaptureController(); VU:ClickButton2(Vector2.new()) end end)
+function Teleporter:TP(pos, requirePlatform) 
+    local c = P.Character; 
+    local h = c and c:FindFirstChild("HumanoidRootPart")
+    if h then 
+        h.CFrame = CFrame.new(pos) + Vector3.new(0, 5, 0) 
+        
+        -- Sistem spawn balok untuk Event agar tidak tenggelam
+        if requirePlatform then
+            self.EventPlat.CFrame = CFrame.new(pos) - Vector3.new(0, 3.5, 0)
+            self.EventPlat.CanCollide = true
+        else
+            self.EventPlat.CanCollide = false
+            self.EventPlat.CFrame = CFrame.new(0, -9999, 0)
+        end
+    end 
+end
+function Teleporter:GetPlr() local l={}; for _,p in ipairs(game.Players:GetPlayers()) do if p~=P then table.insert(l,{name=p.DisplayName, val=p}) end end; return l end
+
+local Islands = {
+    {name="Classic Island", val=Vector3.new(-1764,245,396)},
+    {name="Coral Reef", val=Vector3.new(-3405,253,1918)},
+    {name="Crater Island", val=Vector3.new(-3179,240,-1128)},
+    {name="Copper Canyon", val=Vector3.new(-3342,256,-3389)},
+    {name="Stingray Shores", val=Vector3.new(-1392,303,-3641)},
+    {name="Shadowfang Island", val=Vector3.new(1397,337,-3041)},
+    {name="Verdant Isle", val=Vector3.new(1798,255,-184)},
+    {name="Christmas Island", val=Vector3.new(1345,258,2098)},
+    {name="Ancient Jungle", val=Vector3.new(-428,244,3648)},
+    {name="Fisherman Island", val=Vector3.new(-393,243,-20)},
+    {name="Mythical Island", val=Vector3.new(-215,250,-1787)}
+}
+
+local Events = {
+    {name="Machodon Event", val={pos=Vector3.new(-1381,310,-1781), plat=false}},
+    {name="Strawberry Orca", val={pos=Vector3.new(256,273,-841), plat=true}}
+}
+
+-- Island Section (Y: 5 -> 48)
+Dropdown.new(Teleporter.Frm, 5, "Select Island", Islands, function(v) Teleporter.S_Isl = v end)
+C("TextButton", {Parent=Teleporter.Frm, Size=U2(1,-40,0,25), Position=U2(0,20,0,52), BackgroundColor3=C3(0,122,255), Text="Teleport to Island", TextColor3=C3(255,255,255), Font=F_GM, TextSize=12, ZIndex=1, C("UICorner",{CornerRadius=UDim.new(0,6)}), Click=function() if Teleporter.S_Isl then Teleporter:TP(Teleporter.S_Isl, false) end end})
+
+-- Event Section (Y: 82 -> 125)
+Dropdown.new(Teleporter.Frm, 82, "Select Event", Events, function(v) Teleporter.S_Evt = v end)
+C("TextButton", {Parent=Teleporter.Frm, Size=U2(1,-40,0,25), Position=U2(0,20,0,129), BackgroundColor3=C3(255,149,0), Text="Teleport to Event", TextColor3=C3(255,255,255), Font=F_GM, TextSize=12, ZIndex=1, C("UICorner",{CornerRadius=UDim.new(0,6)}), Click=function() if Teleporter.S_Evt then Teleporter:TP(Teleporter.S_Evt.pos, Teleporter.S_Evt.plat) end end})
+
+-- Player Section (Y: 160 -> 203)
+Teleporter.PlrDrop = Dropdown.new(Teleporter.Frm, 160, "Select Player", Teleporter:GetPlr(), function(v) Teleporter.S_Plr = v end)
+C("TextButton", {Parent=Teleporter.Frm, Size=U2(0,60,0,20), Position=U2(1,-80,0,160), BackgroundColor3=C3(0,122,255), Text="Refresh", TextColor3=C3(255,255,255), Font=F_GM, TextSize=11, C("UICorner",{CornerRadius=UDim.new(0,4)}), Click=function() Teleporter.PlrDrop:Render(Teleporter:GetPlr()); Teleporter.PlrDrop:Reset(); Teleporter.S_Plr=nil end})
+C("TextButton", {Parent=Teleporter.Frm, Size=U2(1,-40,0,25), Position=U2(0,20,0,207), BackgroundColor3=C3(0,122,255), Text="Teleport to Player", TextColor3=C3(255,255,255), Font=F_GM, TextSize=12, ZIndex=1, C("UICorner",{CornerRadius=UDim.new(0,6)}), Click=function() if Teleporter.S_Plr and Teleporter.S_Plr.Character and Teleporter.S_Plr.Character:FindFirstChild("HumanoidRootPart") then Teleporter:TP(Teleporter.S_Plr.Character.HumanoidRootPart.Position, false) end end})
+
+local MiscTools = { Frm = UI:AddTab("Misc", U2(0.75,0,0,0), false), AFK=false, SW=false, Ability=false, SWPart=C("Part",{Parent=workspace,Size=Vector3.new(15,1,15),Anchored=true,Transparency=0.5,CanCollide=false}) }
+local function MkTgl(y, txt, cb) 
+    local s=false;
+    local b=C("TextButton",{Parent=MiscTools.Frm, Size=U2(1,-40,0,35), Position=U2(0,20,0,y), BackgroundColor3=C3(220,220,220), Text=txt.." [OFF]", TextColor3=C3(80,80,80), Font=F_GM, TextSize=13, C("UICorner",{CornerRadius=UDim.new(0,6)})});
+    b.MouseButton1Click:Connect(function() s=not s; b.Text=txt..(s and" [ON]"or" [OFF]"); b.BackgroundColor3=s and C3(0,122,255) or C3(220,220,220); b.TextColor3=s and C3(255,255,255) or C3(80,80,80); cb(s) end) 
+end
+
+MkTgl(20, "Anti AFK", function(v) MiscTools.AFK=v end);
+P.Idled:Connect(function() if MiscTools.AFK then VU:CaptureController(); VU:ClickButton2(Vector2.new()) end end)
 MkTgl(65, "Skywalk Platform", function(v) MiscTools.SW=v end)
-C("TextButton",{Parent=MiscTools.Frm, Size=U2(1,-40,0,35), Position=U2(0,20,0,110), BackgroundColor3=C3(0,122,255), Text="Boost FPS (Remove Textures)", TextColor3=C3(255,255,255), Font=F_GM, TextSize=13, C("UICorner",{CornerRadius=UDim.new(0,6)}), Click=function() game.Lighting.GlobalShadows=false; for _,v in pairs(workspace:GetDescendants()) do if v:IsA("BasePart") then v.Material=Enum.Material.SmoothPlastic; v.Reflectance=0 elseif v:IsA("Decal") or v:IsA("Texture") then v.Transparency=1 end end end})
+
+MkTgl(110, "Always On Ability", function(v) 
+    MiscTools.Ability=v 
+    if v then
+        pcall(function()
+            RS:WaitForChild("FishingSystem"):WaitForChild("AbilityRemotes"):WaitForChild("NotifyAbilityCast"):FireServer()
+        end)
+    end
+end)
+
+C("TextButton",{Parent=MiscTools.Frm, Size=U2(1,-40,0,35), Position=U2(0,20,0,155), BackgroundColor3=C3(0,122,255), Text="Boost FPS (Remove Textures)", TextColor3=C3(255,255,255), Font=F_GM, TextSize=13, C("UICorner",{CornerRadius=UDim.new(0,6)}), Click=function() game.Lighting.GlobalShadows=false; for _,v in pairs(workspace:GetDescendants()) do if v:IsA("BasePart") then v.Material=Enum.Material.SmoothPlastic; v.Reflectance=0 elseif v:IsA("Decal") or v:IsA("Texture") then v.Transparency=1 end end end})
+
+task.spawn(function()
+    local SyncEvt = RS:WaitForChild("FishingSystem"):WaitForChild("AbilityRemotes"):WaitForChild("SyncAbilityProgress")
+    local NotifyEvt = RS:WaitForChild("FishingSystem"):WaitForChild("AbilityRemotes"):WaitForChild("NotifyAbilityCast")
+    local lastSyncTime = 0
+    
+    SyncEvt.OnClientEvent:Connect(function(data)
+        if not MiscTools.Ability then return end
+        if type(data) ~= "table" then return end
+        
+        if data.active == false then
+            local current = tonumber(data.currentRolls) or 0
+            local trigger = tonumber(data.castNumberTrigger) or 0
+            
+            if current < trigger then
+                if tick() - lastSyncTime < 0.3 then return end
+                lastSyncTime = tick()
+                
+                task.spawn(function()
+                    task.wait(0.6)
+                    if MiscTools.Ability then
+                        pcall(function() NotifyEvt:FireServer() end)
+                    end
+                end)
+            end
+        end
+    end)
+end)
 
 task.spawn(function()
     while task.wait(0.5) do
         Leaderboard:Update()
         local t = P.Character and P.Character:FindFirstChildOfClass("Tool")
         FishBot.Rod = t and t.Name or nil
-        if FishBot.Rod then FishBot.LblRod.Text = FishBot.Rod; FishBot.LblRod.TextColor3 = C3(0,122,255); if not FishBot.Active then FishBot.Btn.BackgroundColor3 = C3(0,122,255); FishBot.Btn.Text = "Start Fishing"; FishBot.Btn.AutoButtonColor = true end
-        else FishBot.LblRod.Text = "Not Equipped"; FishBot.LblRod.TextColor3 = C3(255,59,48); FishBot.Btn.BackgroundColor3 = C3(180,180,180); FishBot.Btn.Text = "Lock: Equip Rod"; FishBot.Btn.AutoButtonColor = false end
-        if FishBot.Active and not FishBot.Rod then FishBot.Active = false; FishBot:ShowMsg("Rod Unequipped! Stopped.", C3(255,59,48)) end
+        if FishBot.Rod then 
+            FishBot.LblRod.Text = FishBot.Rod; 
+            FishBot.LblRod.TextColor3 = C3(0,122,255); 
+            if not FishBot.Active then 
+                FishBot.Btn.BackgroundColor3 = C3(0,122,255); 
+                FishBot.Btn.Text = "Start Fishing";
+                FishBot.Btn.AutoButtonColor = true 
+            end
+        else 
+            FishBot.LblRod.Text = "Not Equipped"; 
+            FishBot.LblRod.TextColor3 = C3(255,59,48);
+            FishBot.Btn.BackgroundColor3 = C3(180,180,180); 
+            FishBot.Btn.Text = "Lock: Equip Rod"; 
+            FishBot.Btn.AutoButtonColor = false 
+        end
+        if FishBot.Active and not FishBot.Rod then 
+            FishBot.Active = false;
+            FishBot:ShowMsg("Rod Unequipped! Stopped.", C3(255,59,48)) 
+        end
     end
 end)
 
