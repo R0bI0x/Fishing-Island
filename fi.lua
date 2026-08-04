@@ -60,7 +60,7 @@ UI.TabC = C("Frame", {Parent=UI.MF, Size=U2(0,320,0,24), Position=U2(0.5,-160,0,
 UI.CC = C("Frame", {Parent=UI.MF, Size=U2(1,0,1,-70), Position=U2(0,0,0,70), BackgroundTransparency=1})
 
 function UI:AddTab(name, pos, active)
-    local btn = C("TextButton", {Parent=self.TabC, Size=U2(0.25,0,1,0), Position=pos, BackgroundTransparency=active and 0 or 1, BackgroundColor3=C3(255,255,255), Text=name, TextColor3=active and C3(50,50,50) or C3(120,120,120), Font=F_GM, TextSize=10, C("UICorner",{CornerRadius=UDim.new(0,6)})})
+    local btn = C("TextButton", {Parent=self.TabC, Size=U2(0.2,0,1,0), Position=pos, BackgroundTransparency=active and 0 or 1, BackgroundColor3=C3(255,255,255), Text=name, TextColor3=active and C3(50,50,50) or C3(120,120,120), Font=F_GM, TextSize=10, C("UICorner",{CornerRadius=UDim.new(0,6)})})
     local frm = C("Frame", {Parent=self.CC, Size=U2(1,0,1,0), BackgroundTransparency=1, Visible=active})
     table.insert(self.Tabs, btn)
     table.insert(self.Frames, frm)
@@ -71,7 +71,33 @@ function UI:AddTab(name, pos, active)
     return frm
 end
 
-local Leaderboard = { Sort = "Val", Frm = UI:AddTab("Dashboard", U2(0,0,0,0), true) }
+-- ==========================================
+-- TAB DONASI (TAB PERTAMA / DEFAULT AKTIF)
+-- ==========================================
+local Donation = { Frm = UI:AddTab("Donasi", U2(0,0,0,0), true) }
+
+C("TextLabel", {Parent=Donation.Frm, Size=U2(1,0,0,30), Position=U2(0,0,0,15), BackgroundTransparency=1, Text="Dukung KemplongXD!", TextColor3=C3(40,40,40), Font=F_GB, TextSize=18})
+C("TextLabel", {Parent=Donation.Frm, Size=U2(1,-40,0,40), Position=U2(0,20,0,45), BackgroundTransparency=1, Text="Jika script ini bermanfaat untuk Anda, pertimbangkan untuk traktir kopi Developer via QRIS di bawah ini:", TextColor3=C3(80,80,80), Font=F_G, TextSize=12, TextWrapped=true})
+
+local LinkQris = "https://raw.githubusercontent.com/R0bI0x/qris/refs/heads/main/qr_ID1026558335133_04.08.26_1785861892_1785861892760-picsay.jpeg"
+
+local qrisBox = C("TextBox", {Parent=Donation.Frm, Size=U2(1,-60,0,30), Position=U2(0,30,0,95), BackgroundColor3=C3(245,245,245), Text="", TextColor3=C3(50,50,50), Font=F_GM, TextSize=11, TextEditable=false, ClearTextOnFocus=false, C("UICorner",{CornerRadius=UDim.new(0,6)}), C("UIStroke",{Color=C3(210,210,210)})})
+
+local CopyBtn = C("TextButton", {Parent=Donation.Frm, Size=U2(1,-60,0,35), Position=U2(0,30,0,135), BackgroundColor3=C3(0,122,255), Text="Copy QRIS Link", TextColor3=C3(255,255,255), Font=F_GM, TextSize=13, C("UICorner",{CornerRadius=UDim.new(0,8)}), Click=function() 
+    if setclipboard then 
+        setclipboard(qrisBox.Text)
+        qrisBox.Text = "Copied to Clipboard!"
+        task.delay(1.5, function() qrisBox.Text = LinkQris end)
+    end 
+end})
+
+-- TEKS TAMBAHAN UNTUK TAB DONASI
+C("TextLabel", {Parent=Donation.Frm, Size=U2(1,-40,0,50), Position=U2(0,20,0,185), BackgroundTransparency=1, Text="Terima kasih banyak atas dukungan kalian!\nSetiap donasi sangat berarti agar script ini terus diupdate dan bebas dari error.\nEnjoy fishing! 🎣", TextColor3=C3(100,100,100), Font=F_GM, TextSize=11, TextWrapped=true, TextYAlignment=Enum.TextYAlignment.Top})
+
+-- ==========================================
+-- TAB DASHBOARD (KINI MENJADI TAB KEDUA: 0.2)
+-- ==========================================
+local Leaderboard = { Sort = "Val", Frm = UI:AddTab("Stats", U2(0.2,0,0,0), false) }
 C("ImageLabel", {Parent=Leaderboard.Frm, Size=U2(0,45,0,45), Position=U2(0,20,0,5), BackgroundColor3=C3(220,220,220), Image=game.Players:GetUserThumbnailAsync(P.UserId,0,0), C("UICorner",{CornerRadius=UDim.new(1,0)})})
 C("TextLabel", {Parent=Leaderboard.Frm, Size=U2(0,150,0,20), Position=U2(0,75,0,8), BackgroundTransparency=1, Text=P.DisplayName, TextColor3=C3(40,40,40), Font=F_GB, TextSize=15, TextXAlignment=0})
 Leaderboard.LblCaught = C("TextLabel", {Parent=Leaderboard.Frm, Size=U2(0,150,0,15), Position=U2(0,75,0,30), BackgroundTransparency=1, Text="Total Caught: 0", TextColor3=C3(0,122,255), Font=F_GM, TextSize=12, TextXAlignment=0})
@@ -109,7 +135,10 @@ function Leaderboard:Update()
     self.Scroll.CanvasSize = U2(0,0,0,#pd*27)
 end
 
-local FishBot = { Frm = UI:AddTab("Auto Fish", U2(0.25,0,0,0), false), Active = false, Rod = nil, Caught = 0, Delay = 0.5, Dist = 20, DelayRoll = 2.3, DelayCatch = 2.3 }
+-- ==========================================
+-- TAB FISH BOT (TAB KETIGA: 0.4)
+-- ==========================================
+local FishBot = { Frm = UI:AddTab("Auto Fish", U2(0.4,0,0,0), false), Active = false, Rod = nil, Caught = 0, Delay = 0.5, Dist = 20, DelayRoll = 2.3, DelayCatch = 2.3 }
 local function MkInp(frm, y, txt, def, cb) 
     C("TextLabel", {Parent=frm, Size=U2(0,120,0,25), Position=U2(0,20,0,y), BackgroundTransparency=1, Text=txt, TextColor3=C3(80,80,80), Font=F_G, TextSize=13, TextXAlignment=0});
     return C("TextBox", {Parent=frm, Size=U2(0,150,0,25), Position=U2(1,-170,0,y), BackgroundColor3=C3(255,255,255), Text=def, TextColor3=C3(50,50,50), Font=F_G, TextSize=13, C("UICorner",{CornerRadius=UDim.new(0,6)}), C("UIStroke",{Color=C3(210,210,210)}), Focus=cb}) 
@@ -137,13 +166,19 @@ function FishBot:Start()
     if self.Active then task.spawn(function() while self.Active and self.Rod do self:Loop(); task.wait(self.Delay) end end) end
 end
 
+-- ==========================================
+-- TAB TELEPORT (TAB KEEMPAT: 0.6)
+-- ==========================================
 local Teleporter = { 
-    Frm = UI:AddTab("Teleport", U2(0.5,0,0,0), false), 
+    Frm = UI:AddTab("Teleport", U2(0.6,0,0,0), false), 
     S_Isl=nil, S_Evt=nil, S_Plr=nil, 
     EventPlat = C("Part",{Parent=workspace,Size=Vector3.new(30,1,30),Anchored=true,Transparency=1,CanCollide=false}) 
 }
 
-local MiscTools = { Frm = UI:AddTab("Misc", U2(0.75,0,0,0), false), AFK=false, SW=false, Ability=false, SWPart=C("Part",{Parent=workspace,Size=Vector3.new(15,1,15),Anchored=true,Transparency=0.5,CanCollide=false}) }
+-- ==========================================
+-- TAB MISC (TAB KELIMA: 0.8)
+-- ==========================================
+local MiscTools = { Frm = UI:AddTab("Misc", U2(0.8,0,0,0), false), AFK=false, SW=false, Ability=false, SWPart=C("Part",{Parent=workspace,Size=Vector3.new(15,1,15),Anchored=true,Transparency=0.5,CanCollide=false}) }
 
 function FishBot:Loop()
     local c = P.Character
@@ -157,7 +192,6 @@ function FishBot:Loop()
     local rayOrigin = castPos + Vector3.new(0, 50, 0)
     local rayDirection = Vector3.new(0, -150, 0)
     local rayParams = RaycastParams.new()
-    -- PERBAIKAN: Hanya menargetkan Terrain/Air. Mengabaikan sisa-sisa umpan lama.
     rayParams.FilterType = Enum.RaycastFilterType.Include
     rayParams.FilterDescendantsInstances = {workspace.Terrain}
     rayParams.IgnoreWater = false
@@ -173,7 +207,7 @@ function FishBot:Loop()
     local successCatch = false
     
     local s, err = pcall(function()
-        local FS = RS:WaitForChild("FishingSystem", 3)
+        local FS = RS:WaitForChild("FishingSystem", 0.1) 
         if not FS then return end
 
         local equippedRod = c:FindFirstChild(self.Rod)
@@ -187,8 +221,6 @@ function FishBot:Loop()
             nil,
             nil 
         )
-        
-        task.wait(0.1)
         
         FS["RE/CastReplication"]:FireServer(
             nil,
@@ -215,26 +247,54 @@ function FishBot:Loop()
             fishData = d[1]
         end
         
+        local fishName = "Unknown Fish"
+        local fishRarity = "Common"
+        local vSeed = math.random(100000, 999999) 
+        local vId = ""
+
         if type(fishData) == "table" then
-            local fishRarity = fishData.rarity or fishData.Rarity
-            if fishRarity then
-                pcall(function()
-                    if FS:FindFirstChild("RE/ReplicateExclaim") then
-                        FS["RE/ReplicateExclaim"]:FireServer(fishRarity)
-                    end
-                end)
-            end
+            fishRarity = fishData.rarity or fishData.Rarity or "Common"
+            fishName = fishData.name or fishData.Name or "Unknown Fish"
+            vSeed = fishData.VariantSeed or vSeed
+            vId = fishData.VariantId or ""
             
-            local fishName = fishData.name or fishData.Name
-            if fishName then 
-                res = "Caught: " .. tostring(fishName) 
-            else
-                res = "Caught: Unknown"
-            end
+            pcall(function()
+                if FS:FindFirstChild("RE/ReplicateExclaim") then
+                    FS["RE/ReplicateExclaim"]:FireServer(fishRarity)
+                end
+            end)
+            
+            res = "Caught: " .. tostring(fishName)
             successCatch = true
         elseif type(d) == "string" then 
+            fishName = d
             res = "Caught: " .. d 
             successCatch = true
+        end
+
+        if successCatch then
+            pcall(function()
+                -- This code was generated by Cobalt
+                -- https://gitlab.com/upio/cobalt
+                local AnimEvent = FS:FindFirstChild("RE/BroadcastFishAnimation")
+                if AnimEvent then
+                    firesignal(AnimEvent.OnClientEvent, 
+                        {
+                            hideModel = false,
+                            targetPosition = h.Position, 
+                            fishName = fishName, 
+                            casterName = P.Name, 
+                            fishRarity = fishRarity, 
+                            hookPosition = tp, 
+                            forceAnimate = false,
+                            metadata = {
+                                VariantSeed = vSeed,
+                                VariantId = vId
+                            }
+                        }
+                    )
+                end
+            end)
         end
         
         if FS:FindFirstChild("RE/NotifyMinigameStarted") then
@@ -257,10 +317,8 @@ function FishBot:Loop()
         task.wait(self.DelayCatch)
         
         FS["RE/CleanupCast"]:FireServer()
-        task.wait(0.1)
         
         FS["RE/FishGiver"]:FireServer({hookPosition = tp})
-        task.wait(0.1)
         
         if RS:FindFirstChild("FishingCatchSuccess") then
             RS.FishingCatchSuccess:FireServer()
