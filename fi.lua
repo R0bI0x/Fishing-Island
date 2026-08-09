@@ -60,7 +60,7 @@ UI.TabC = C("Frame", {Parent=UI.MF, Size=U2(0,320,0,24), Position=U2(0.5,-160,0,
 UI.CC = C("Frame", {Parent=UI.MF, Size=U2(1,0,1,-70), Position=U2(0,0,0,70), BackgroundTransparency=1})
 
 function UI:AddTab(name, pos, active)
-    local btn = C("TextButton", {Parent=self.TabC, Size=U2(0.2,0,1,0), Position=pos, BackgroundTransparency=active and 0 or 1, BackgroundColor3=C3(255,255,255), Text=name, TextColor3=active and C3(50,50,50) or C3(120,120,120), Font=F_GM, TextSize=10, C("UICorner",{CornerRadius=UDim.new(0,6)})})
+    local btn = C("TextButton", {Parent=self.TabC, Size=U2(0.166,0,1,0), Position=pos, BackgroundTransparency=active and 0 or 1, BackgroundColor3=C3(255,255,255), Text=name, TextColor3=active and C3(50,50,50) or C3(120,120,120), Font=F_GM, TextSize=10, C("UICorner",{CornerRadius=UDim.new(0,6)})})
     local frm = C("Frame", {Parent=self.CC, Size=U2(1,0,1,0), BackgroundTransparency=1, Visible=active})
     table.insert(self.Tabs, btn)
     table.insert(self.Frames, frm)
@@ -72,32 +72,36 @@ function UI:AddTab(name, pos, active)
 end
 
 -- ==========================================
--- TAB DONASI (TAB PERTAMA / DEFAULT AKTIF)
+-- SETUP TABS
 -- ==========================================
 local Donation = { Frm = UI:AddTab("Donasi", U2(0,0,0,0), true) }
+local Leaderboard = { Sort = "Val", Frm = UI:AddTab("Stats", U2(0.166,0,0,0), false) }
+local FishBot = { Frm = UI:AddTab("Auto Fish", U2(0.332,0,0,0), false), Active = false, Rod = nil, Caught = 0, Delay = 0.5, Dist = 20, DelayRoll = 2.3, DelayCatch = 2.3 }
+local Teleporter = { Frm = UI:AddTab("Teleport", U2(0.498,0,0,0), false), S_Isl=nil, S_Evt=nil, S_Plr=nil, EventPlat = C("Part",{Parent=workspace,Size=Vector3.new(30,1,30),Anchored=true,Transparency=1,CanCollide=false}) }
+local MiscTools = { Frm = UI:AddTab("Misc", U2(0.664,0,0,0), false), AFK=false, SW=false, Ability=false, SWPart=C("Part",{Parent=workspace,Size=Vector3.new(15,1,15),Anchored=true,Transparency=0.5,CanCollide=false}) }
+local ShopTab = { Frm = UI:AddTab("Shop", U2(0.83,0,0,0), false), AutoBuy = false, AutoTotem = false, AutoSpin = false, TargetAbility = "Both", AutoPlaceTotem = false, TotemDelay = 3600 }
 
+
+-- ==========================================
+-- TAB DONASI
+-- ==========================================
 C("TextLabel", {Parent=Donation.Frm, Size=U2(1,0,0,30), Position=U2(0,0,0,15), BackgroundTransparency=1, Text="Dukung KemplongXD!", TextColor3=C3(40,40,40), Font=F_GB, TextSize=18})
 C("TextLabel", {Parent=Donation.Frm, Size=U2(1,-40,0,40), Position=U2(0,20,0,45), BackgroundTransparency=1, Text="Jika script ini bermanfaat untuk Anda, pertimbangkan untuk traktir kopi Developer via QRIS di bawah ini:", TextColor3=C3(80,80,80), Font=F_G, TextSize=12, TextWrapped=true})
-
 local LinkQris = "https://raw.githubusercontent.com/R0bI0x/qris/refs/heads/main/qr_ID1026558335133_04.08.26_1785861892_1785861892760-picsay.jpeg"
-
 local qrisBox = C("TextBox", {Parent=Donation.Frm, Size=U2(1,-60,0,30), Position=U2(0,30,0,95), BackgroundColor3=C3(245,245,245), Text="", TextColor3=C3(50,50,50), Font=F_GM, TextSize=11, TextEditable=false, ClearTextOnFocus=false, C("UICorner",{CornerRadius=UDim.new(0,6)}), C("UIStroke",{Color=C3(210,210,210)})})
-
-local CopyBtn = C("TextButton", {Parent=Donation.Frm, Size=U2(1,-60,0,35), Position=U2(0,30,0,135), BackgroundColor3=C3(0,122,255), Text="Copy QRIS Link", TextColor3=C3(255,255,255), Font=F_GM, TextSize=13, C("UICorner",{CornerRadius=UDim.new(0,8)}), Click=function() 
+C("TextButton", {Parent=Donation.Frm, Size=U2(1,-60,0,35), Position=U2(0,30,0,135), BackgroundColor3=C3(0,122,255), Text="Copy QRIS Link", TextColor3=C3(255,255,255), Font=F_GM, TextSize=13, C("UICorner",{CornerRadius=UDim.new(0,8)}), Click=function() 
     if setclipboard then 
         setclipboard(qrisBox.Text)
         qrisBox.Text = "Copied to Clipboard!"
         task.delay(1.5, function() qrisBox.Text = LinkQris end)
     end 
 end})
-
--- TEKS TAMBAHAN UNTUK TAB DONASI
 C("TextLabel", {Parent=Donation.Frm, Size=U2(1,-40,0,50), Position=U2(0,20,0,185), BackgroundTransparency=1, Text="Terima kasih banyak atas dukungan kalian!\nSetiap donasi sangat berarti agar script ini terus diupdate dan bebas dari error.\nEnjoy fishing! 🎣", TextColor3=C3(100,100,100), Font=F_GM, TextSize=11, TextWrapped=true, TextYAlignment=Enum.TextYAlignment.Top})
 
+
 -- ==========================================
--- TAB DASHBOARD (KINI MENJADI TAB KEDUA: 0.2)
+-- TAB DASHBOARD / STATS
 -- ==========================================
-local Leaderboard = { Sort = "Val", Frm = UI:AddTab("Stats", U2(0.2,0,0,0), false) }
 C("ImageLabel", {Parent=Leaderboard.Frm, Size=U2(0,45,0,45), Position=U2(0,20,0,5), BackgroundColor3=C3(220,220,220), Image=game.Players:GetUserThumbnailAsync(P.UserId,0,0), C("UICorner",{CornerRadius=UDim.new(1,0)})})
 C("TextLabel", {Parent=Leaderboard.Frm, Size=U2(0,150,0,20), Position=U2(0,75,0,8), BackgroundTransparency=1, Text=P.DisplayName, TextColor3=C3(40,40,40), Font=F_GB, TextSize=15, TextXAlignment=0})
 Leaderboard.LblCaught = C("TextLabel", {Parent=Leaderboard.Frm, Size=U2(0,150,0,15), Position=U2(0,75,0,30), BackgroundTransparency=1, Text="Total Caught: 0", TextColor3=C3(0,122,255), Font=F_GM, TextSize=12, TextXAlignment=0})
@@ -135,10 +139,10 @@ function Leaderboard:Update()
     self.Scroll.CanvasSize = U2(0,0,0,#pd*27)
 end
 
+
 -- ==========================================
--- TAB FISH BOT (TAB KETIGA: 0.4)
+-- TAB AUTO FISH
 -- ==========================================
-local FishBot = { Frm = UI:AddTab("Auto Fish", U2(0.4,0,0,0), false), Active = false, Rod = nil, Caught = 0, Delay = 0.5, Dist = 20, DelayRoll = 2.3, DelayCatch = 2.3 }
 local function MkInp(frm, y, txt, def, cb) 
     C("TextLabel", {Parent=frm, Size=U2(0,120,0,25), Position=U2(0,20,0,y), BackgroundTransparency=1, Text=txt, TextColor3=C3(80,80,80), Font=F_G, TextSize=13, TextXAlignment=0});
     return C("TextBox", {Parent=frm, Size=U2(0,150,0,25), Position=U2(1,-170,0,y), BackgroundColor3=C3(255,255,255), Text=def, TextColor3=C3(50,50,50), Font=F_G, TextSize=13, C("UICorner",{CornerRadius=UDim.new(0,6)}), C("UIStroke",{Color=C3(210,210,210)}), Focus=cb}) 
@@ -155,7 +159,7 @@ function FishBot:ShowMsg(msg, col)
     self.Notif.Text=msg; 
     self.Notif.TextColor3=col or C3(52,199,89); 
     TS:Create(self.Notif,TweenInfo.new(0.2),{TextTransparency=0}):Play();
-    task.delay(0.7, function() TS:Create(self.Notif,TweenInfo.new(0.5),{TextTransparency=1}):Play() end) 
+    task.delay(1.5, function() TS:Create(self.Notif,TweenInfo.new(0.5),{TextTransparency=1}):Play() end) 
 end
 
 function FishBot:Start()
@@ -166,24 +170,9 @@ function FishBot:Start()
     if self.Active then task.spawn(function() while self.Active and self.Rod do self:Loop(); task.wait(self.Delay) end end) end
 end
 
--- ==========================================
--- TAB TELEPORT (TAB KEEMPAT: 0.6)
--- ==========================================
-local Teleporter = { 
-    Frm = UI:AddTab("Teleport", U2(0.6,0,0,0), false), 
-    S_Isl=nil, S_Evt=nil, S_Plr=nil, 
-    EventPlat = C("Part",{Parent=workspace,Size=Vector3.new(30,1,30),Anchored=true,Transparency=1,CanCollide=false}) 
-}
-
--- ==========================================
--- TAB MISC (TAB KELIMA: 0.8)
--- ==========================================
-local MiscTools = { Frm = UI:AddTab("Misc", U2(0.8,0,0,0), false), AFK=false, SW=false, Ability=false, SWPart=C("Part",{Parent=workspace,Size=Vector3.new(15,1,15),Anchored=true,Transparency=0.5,CanCollide=false}) }
-
 function FishBot:Loop()
     local c = P.Character
     local h = c and c:FindFirstChild("HumanoidRootPart")
-    
     if not h or not self.Rod then return end
     
     local castPos = h.Position + (h.CFrame.LookVector * self.Dist)
@@ -197,11 +186,7 @@ function FishBot:Loop()
     rayParams.IgnoreWater = false
     
     local rayResult = workspace:Raycast(rayOrigin, rayDirection, rayParams)
-    if rayResult then
-        tp = rayResult.Position
-    else
-        tp = castPos - Vector3.new(0, 3, 0)
-    end
+    if rayResult then tp = rayResult.Position else tp = castPos - Vector3.new(0, 3, 0) end
 
     local res = "Gagal menangkap ikan"
     local successCatch = false
@@ -213,22 +198,8 @@ function FishBot:Loop()
         local equippedRod = c:FindFirstChild(self.Rod)
         if not equippedRod then return end
         
-        FS["RE/CastReplication"]:FireServer(
-            tp,
-            h.Position,
-            self.Rod,
-            100,
-            nil,
-            nil 
-        )
-        
-        FS["RE/CastReplication"]:FireServer(
-            nil,
-            nil,
-            nil,
-            nil,
-            tp
-        )
+        FS["RE/CastReplication"]:FireServer(tp, h.Position, self.Rod, 100, nil, nil)
+        FS["RE/CastReplication"]:FireServer(nil, nil, nil, nil, tp)
         
         task.wait(self.DelayRoll)
         
@@ -236,16 +207,10 @@ function FishBot:Loop()
 
         local d = FS["RF/RollFishServer"]:InvokeServer(self.Rod, 1)
 
-        pcall(function()
-            if FS:FindFirstChild("GetPlayerStats") then
-                FS.GetPlayerStats:InvokeServer()
-            end
-        end)
+        pcall(function() if FS:FindFirstChild("GetPlayerStats") then FS.GetPlayerStats:InvokeServer() end end)
         
         local fishData = d
-        if type(d) == "table" and d[1] and type(d[1]) == "table" then
-            fishData = d[1]
-        end
+        if type(d) == "table" and d[1] and type(d[1]) == "table" then fishData = d[1] end
         
         local fishName = "Unknown Fish"
         local fishRarity = "Common"
@@ -257,13 +222,7 @@ function FishBot:Loop()
             fishName = fishData.name or fishData.Name or "Unknown Fish"
             vSeed = fishData.VariantSeed or vSeed
             vId = fishData.VariantId or ""
-            
-            pcall(function()
-                if FS:FindFirstChild("RE/ReplicateExclaim") then
-                    FS["RE/ReplicateExclaim"]:FireServer(fishRarity)
-                end
-            end)
-            
+            pcall(function() if FS:FindFirstChild("RE/ReplicateExclaim") then FS["RE/ReplicateExclaim"]:FireServer(fishRarity) end end)
             res = "Caught: " .. tostring(fishName)
             successCatch = true
         elseif type(d) == "string" then 
@@ -274,55 +233,27 @@ function FishBot:Loop()
 
         if successCatch then
             pcall(function()
-                -- This code was generated by Cobalt
-                -- https://gitlab.com/upio/cobalt
                 local AnimEvent = FS:FindFirstChild("RE/BroadcastFishAnimation")
                 if AnimEvent then
                     firesignal(AnimEvent.OnClientEvent, 
-                        {
-                            hideModel = false,
-                            targetPosition = h.Position, 
-                            fishName = fishName, 
-                            casterName = P.Name, 
-                            fishRarity = fishRarity, 
-                            hookPosition = tp, 
-                            forceAnimate = false,
-                            metadata = {
-                                VariantSeed = vSeed,
-                                VariantId = vId
-                            }
-                        }
+                        { hideModel = false, targetPosition = h.Position, fishName = fishName, casterName = P.Name, fishRarity = fishRarity, hookPosition = tp, forceAnimate = false, metadata = { VariantSeed = vSeed, VariantId = vId } }
                     )
                 end
             end)
         end
         
-        if FS:FindFirstChild("RE/NotifyMinigameStarted") then
-            FS["RE/NotifyMinigameStarted"]:FireServer()
-        end
+        if FS:FindFirstChild("RE/NotifyMinigameStarted") then FS["RE/NotifyMinigameStarted"]:FireServer() end
         
         pcall(function()
-            local AbilityEvent = FS.AbilityRemotes.NotifyAbilityCast
-            AbilityEvent:InvokeServer()
-        end)
-
-        pcall(function()
-            local VFXEvent = FS.AbilityRemotes.BroadcastAbilityDiveVFX
-            VFXEvent:FireServer({
-                abilityName = "Divine",
-                position = tp
-            })
+            FS.AbilityRemotes.NotifyAbilityCast:InvokeServer()
+            FS.AbilityRemotes.BroadcastAbilityDiveVFX:FireServer({abilityName = "Divine", position = tp})
         end)
         
         task.wait(self.DelayCatch)
         
         FS["RE/CleanupCast"]:FireServer()
-        
         FS["RE/FishGiver"]:FireServer({hookPosition = tp})
-        
-        if RS:FindFirstChild("FishingCatchSuccess") then
-            RS.FishingCatchSuccess:FireServer()
-        end
+        if RS:FindFirstChild("FishingCatchSuccess") then RS.FishingCatchSuccess:FireServer() end
     end)
     
     if s and successCatch and self.Active then 
@@ -334,40 +265,39 @@ function FishBot:Loop()
     end
 end
 
+
+-- ==========================================
+-- TAB TELEPORT
+-- ==========================================
 function Teleporter:TP(pos, requirePlatform) 
-    local c = P.Character; 
-    local h = c and c:FindFirstChild("HumanoidRootPart")
+    local c = P.Character; local h = c and c:FindFirstChild("HumanoidRootPart")
     if h then 
         h.CFrame = CFrame.new(pos) + Vector3.new(0, 5, 0) 
         if requirePlatform then
-            self.EventPlat.CFrame = CFrame.new(pos) - Vector3.new(0, 3.5, 0)
-            self.EventPlat.CanCollide = true
+            self.EventPlat.CFrame = CFrame.new(pos) - Vector3.new(0, 3.5, 0); self.EventPlat.CanCollide = true
         else
-            self.EventPlat.CanCollide = false
-            self.EventPlat.CFrame = CFrame.new(0, -9999, 0)
+            self.EventPlat.CanCollide = false; self.EventPlat.CFrame = CFrame.new(0, -9999, 0)
         end
     end 
 end
-function Teleporter:GetPlr() local l={}; for _,p in ipairs(game.Players:GetPlayers()) do if p~=P then table.insert(l,{name=p.DisplayName, val=p}) end end; return l end
+
+function Teleporter:GetPlr() 
+    local l = {}; 
+    for _, p in ipairs(game.Players:GetPlayers()) do 
+        if p ~= P then table.insert(l, {name = p.DisplayName .. " (@" .. p.Name .. ")", val = p.Name}) end 
+    end; 
+    return l 
+end
 
 local Islands = {
-    {name="Classic Island", val=Vector3.new(-1764,245,396)},
-    {name="Coral Reef", val=Vector3.new(-3405,253,1918)},
-    {name="Crater Island", val=Vector3.new(-3179,240,-1128)},
-    {name="Copper Canyon", val=Vector3.new(-3342,256,-3389)},
-    {name="Stingray Shores", val=Vector3.new(-1392,303,-3641)},
-    {name="Shadowfang Island", val=Vector3.new(1397,337,-3041)},
-    {name="Verdant Isle", val=Vector3.new(1798,255,-184)},
-    {name="Christmas Island", val=Vector3.new(1345,258,2098)},
-    {name="Ancient Jungle", val=Vector3.new(-428,244,3648)},
-    {name="Fisherman Island", val=Vector3.new(-393,243,-20)},
+    {name="Classic Island", val=Vector3.new(-1764,245,396)}, {name="Coral Reef", val=Vector3.new(-3405,253,1918)},
+    {name="Crater Island", val=Vector3.new(-3179,240,-1128)}, {name="Copper Canyon", val=Vector3.new(-3342,256,-3389)},
+    {name="Stingray Shores", val=Vector3.new(-1392,303,-3641)}, {name="Shadowfang Island", val=Vector3.new(1397,337,-3041)},
+    {name="Verdant Isle", val=Vector3.new(1798,255,-184)}, {name="Christmas Island", val=Vector3.new(1345,258,2098)},
+    {name="Ancient Jungle", val=Vector3.new(-428,244,3648)}, {name="Fisherman Island", val=Vector3.new(-393,243,-20)},
     {name="Mythical Island", val=Vector3.new(-215,250,-1787)}
 }
-
-local Events = {
-    {name="Machodon Event", val={pos=Vector3.new(-1381,310,-1781), plat=false}},
-    {name="Strawberry Orca", val={pos=Vector3.new(256,273,-841), plat=true}}
-}
+local Events = { {name="Machodon Event", val={pos=Vector3.new(-1381,310,-1781), plat=false}}, {name="Strawberry Orca", val={pos=Vector3.new(256,273,-841), plat=true}} }
 
 Dropdown.new(Teleporter.Frm, 5, "Select Island", Islands, function(v) Teleporter.S_Isl = v end)
 C("TextButton", {Parent=Teleporter.Frm, Size=U2(1,-40,0,25), Position=U2(0,20,0,52), BackgroundColor3=C3(0,122,255), Text="Teleport to Island", TextColor3=C3(255,255,255), Font=F_GM, TextSize=12, ZIndex=1, C("UICorner",{CornerRadius=UDim.new(0,6)}), Click=function() if Teleporter.S_Isl then Teleporter:TP(Teleporter.S_Isl, false) end end})
@@ -377,8 +307,22 @@ C("TextButton", {Parent=Teleporter.Frm, Size=U2(1,-40,0,25), Position=U2(0,20,0,
 
 Teleporter.PlrDrop = Dropdown.new(Teleporter.Frm, 160, "Select Player", Teleporter:GetPlr(), function(v) Teleporter.S_Plr = v end)
 C("TextButton", {Parent=Teleporter.Frm, Size=U2(0,60,0,20), Position=U2(1,-80,0,160), BackgroundColor3=C3(0,122,255), Text="Refresh", TextColor3=C3(255,255,255), Font=F_GM, TextSize=11, C("UICorner",{CornerRadius=UDim.new(0,4)}), Click=function() Teleporter.PlrDrop:Render(Teleporter:GetPlr()); Teleporter.PlrDrop:Reset(); Teleporter.S_Plr=nil end})
-C("TextButton", {Parent=Teleporter.Frm, Size=U2(1,-40,0,25), Position=U2(0,20,0,207), BackgroundColor3=C3(0,122,255), Text="Teleport to Player", TextColor3=C3(255,255,255), Font=F_GM, TextSize=12, ZIndex=1, C("UICorner",{CornerRadius=UDim.new(0,6)}), Click=function() if Teleporter.S_Plr and Teleporter.S_Plr.Character and Teleporter.S_Plr.Character:FindFirstChild("HumanoidRootPart") then Teleporter:TP(Teleporter.S_Plr.Character.HumanoidRootPart.Position, false) end end})
 
+C("TextButton", {Parent=Teleporter.Frm, Size=U2(1,-40,0,25), Position=U2(0,20,0,207), BackgroundColor3=C3(0,122,255), Text="Teleport to Player", TextColor3=C3(255,255,255), Font=F_GM, TextSize=12, ZIndex=1, C("UICorner",{CornerRadius=UDim.new(0,6)}), Click=function() 
+    if Teleporter.S_Plr then
+        local targetPlayer = game.Players:FindFirstChild(Teleporter.S_Plr)
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then 
+            Teleporter:TP(targetPlayer.Character.HumanoidRootPart.Position, false) 
+        else
+            if FishBot and FishBot.ShowMsg then FishBot:ShowMsg("Target belum spawn / tidak valid!", C3(255,59,48)) end
+        end 
+    end
+end})
+
+
+-- ==========================================
+-- TAB MISC
+-- ==========================================
 local function MkTgl(y, txt, cb) 
     local s=false;
     local b=C("TextButton",{Parent=MiscTools.Frm, Size=U2(1,-40,0,35), Position=U2(0,20,0,y), BackgroundColor3=C3(220,220,220), Text=txt.." [OFF]", TextColor3=C3(80,80,80), Font=F_GM, TextSize=13, C("UICorner",{CornerRadius=UDim.new(0,6)})});
@@ -388,41 +332,74 @@ end
 MkTgl(20, "Anti AFK", function(v) MiscTools.AFK=v end);
 P.Idled:Connect(function() if MiscTools.AFK then VU:CaptureController(); VU:ClickButton2(Vector2.new()) end end)
 MkTgl(65, "Skywalk Platform", function(v) MiscTools.SW=v end)
-
 MkTgl(110, "Always On Ability", function(v) 
     MiscTools.Ability=v 
-    if v then
-        pcall(function()
-            RS:WaitForChild("FishingSystem"):WaitForChild("AbilityRemotes"):WaitForChild("NotifyAbilityCast"):InvokeServer()
-        end)
-    end
+    if v then pcall(function() RS:WaitForChild("FishingSystem"):WaitForChild("AbilityRemotes"):WaitForChild("NotifyAbilityCast"):InvokeServer() end) end
 end)
-
 C("TextButton",{Parent=MiscTools.Frm, Size=U2(1,-40,0,35), Position=U2(0,20,0,155), BackgroundColor3=C3(0,122,255), Text="Boost FPS (Remove Textures)", TextColor3=C3(255,255,255), Font=F_GM, TextSize=13, C("UICorner",{CornerRadius=UDim.new(0,6)}), Click=function() game.Lighting.GlobalShadows=false; for _,v in pairs(workspace:GetDescendants()) do if v:IsA("BasePart") then v.Material=Enum.Material.SmoothPlastic; v.Reflectance=0 elseif v:IsA("Decal") or v:IsA("Texture") then v.Transparency=1 end end end})
 
+
+-- ==========================================
+-- TAB SHOP & SPIN 
+-- ==========================================
+local spinButtonRef = nil
+local function MkTglShop(y, txt, cb, passBtnRef) 
+    local s = false;
+    local b = C("TextButton",{Parent=ShopTab.Frm, Size=U2(1,-40,0,25), Position=U2(0,20,0,y), BackgroundColor3=C3(220,220,220), Text=txt.." [OFF]", TextColor3=C3(80,80,80), Font=F_GM, TextSize=12, C("UICorner",{CornerRadius=UDim.new(0,6)})});
+    b.MouseButton1Click:Connect(function() 
+        if ShopTab.AutoSpin == false and b.Text:find("Spin") and b.BackgroundColor3 == C3(220,220,220) then s = false end
+        s = not s; b.Text = txt..(s and " [ON]" or " [OFF]"); b.BackgroundColor3 = s and C3(0,122,255) or C3(220,220,220); b.TextColor3 = s and C3(255,255,255) or C3(80,80,80); cb(s) 
+    end) 
+    if passBtnRef then passBtnRef(b) end
+end
+
+local function MkInpShop(frm, y, txt, def, cb) 
+    C("TextLabel", {Parent=frm, Size=U2(0,120,0,25), Position=U2(0,20,0,y), BackgroundTransparency=1, Text=txt, TextColor3=C3(80,80,80), Font=F_G, TextSize=13, TextXAlignment=0});
+    return C("TextBox", {Parent=frm, Size=U2(0,150,0,25), Position=U2(1,-170,0,y), BackgroundColor3=C3(255,255,255), Text=def, TextColor3=C3(50,50,50), Font=F_G, TextSize=13, C("UICorner",{CornerRadius=UDim.new(0,6)}), C("UIStroke",{Color=C3(210,210,210)}), Focus=cb}) 
+end
+
+MkTglShop(5, "Auto Buy Weather", function(v) ShopTab.AutoBuy = v end)
+MkTglShop(35, "Auto Buy Totems (Stand Alone)", function(v) ShopTab.AutoTotem = v end)
+
+-- UI: Dropdown untuk memilih Target Ability
+ShopTab.TargetAbility = "Both"
+local AbilityTargets = {
+    {name="Divine Only", val="Divine"},
+    {name="Supernova Only", val="Supernova"},
+    {name="Divine / Supernova", val="Both"}
+}
+local abilityDrop = Dropdown.new(ShopTab.Frm, 75, "Target Spin Ability", AbilityTargets, function(v) ShopTab.TargetAbility = v end)
+abilityDrop.Btn.Text = "  Divine / Supernova" -- Default Set
+abilityDrop.Btn.Size = U2(1,-40,0,25)
+abilityDrop.Scroll.Position = U2(0,20,0,120)
+
+MkTglShop(135, "Auto Spin Ability", function(v) ShopTab.AutoSpin = v end, function(b) spinButtonRef = b end)
+MkTglShop(170, "Auto Combo (Buy -> Place -> Wait)", function(v) ShopTab.AutoPlaceTotem = v end)
+
+ShopTab.TotemDelay = 3600
+MkInpShop(ShopTab.Frm, 210, "Totem Expiry (s):", "3600", function(b) 
+    ShopTab.TotemDelay = tonumber(b.Text) or 3600; 
+    b.Text = tostring(ShopTab.TotemDelay) 
+end)
+
+
+-- ==========================================
+-- BACKGROUND TASKS / LOOPS
+-- ==========================================
 task.spawn(function()
     local SyncEvt = RS:WaitForChild("FishingSystem"):WaitForChild("AbilityRemotes"):WaitForChild("SyncAbilityProgress")
     local NotifyEvt = RS:WaitForChild("FishingSystem"):WaitForChild("AbilityRemotes"):WaitForChild("NotifyAbilityCast")
     local lastSyncTime = 0
-    
     SyncEvt.OnClientEvent:Connect(function(data)
         if not MiscTools.Ability then return end
         if type(data) ~= "table" then return end
-        
         if data.active == false then
             local current = tonumber(data.currentRolls) or 0
             local trigger = tonumber(data.castNumberTrigger) or 0
-            
             if current < trigger then
                 if tick() - lastSyncTime < 0.3 then return end
                 lastSyncTime = tick()
-                
-                task.spawn(function()
-                    task.wait(0.6)
-                    if MiscTools.Ability then
-                        pcall(function() NotifyEvt:InvokeServer() end)
-                    end
-                end)
+                task.spawn(function() task.wait(0.6); if MiscTools.Ability then pcall(function() NotifyEvt:InvokeServer() end) end end)
             end
         end
     end)
@@ -434,23 +411,143 @@ task.spawn(function()
         local t = P.Character and P.Character:FindFirstChildOfClass("Tool")
         FishBot.Rod = t and t.Name or nil
         if FishBot.Rod then 
-            FishBot.LblRod.Text = FishBot.Rod; 
-            FishBot.LblRod.TextColor3 = C3(0,122,255); 
-            if not FishBot.Active then 
-                FishBot.Btn.BackgroundColor3 = C3(0,122,255); 
-                FishBot.Btn.Text = "Start Fishing";
-                FishBot.Btn.AutoButtonColor = true 
-            end
+            FishBot.LblRod.Text = FishBot.Rod; FishBot.LblRod.TextColor3 = C3(0,122,255); 
+            if not FishBot.Active then FishBot.Btn.BackgroundColor3 = C3(0,122,255); FishBot.Btn.Text = "Start Fishing"; FishBot.Btn.AutoButtonColor = true end
         else 
-            FishBot.LblRod.Text = "Not Equipped"; 
-            FishBot.LblRod.TextColor3 = C3(255,59,48);
-            FishBot.Btn.BackgroundColor3 = C3(180,180,180); 
-            FishBot.Btn.Text = "Lock: Equip Rod"; 
-            FishBot.Btn.AutoButtonColor = false 
+            FishBot.LblRod.Text = "Not Equipped"; FishBot.LblRod.TextColor3 = C3(255,59,48);
+            FishBot.Btn.BackgroundColor3 = C3(180,180,180); FishBot.Btn.Text = "Lock: Equip Rod"; FishBot.Btn.AutoButtonColor = false 
         end
-        if FishBot.Active and not FishBot.Rod then 
-            FishBot.Active = false;
-            FishBot:ShowMsg("Rod Unequipped! Stopped.", C3(255,59,48)) 
+        if FishBot.Active and not FishBot.Rod then FishBot.Active = false; FishBot:ShowMsg("Rod Unequipped! Stopped.", C3(255,59,48)) end
+    end
+end)
+
+-- Task: Auto Buy Weather
+task.spawn(function()
+    local WeatherRemotes = RS:WaitForChild("WeatherRemotes", 5)
+    while task.wait(3) do
+        if ShopTab.AutoBuy and WeatherRemotes then
+            pcall(function()
+                local data = WeatherRemotes.GetWeatherData:InvokeServer()
+                if type(data) == "table" then
+                    local list = data
+                    if type(list[1]) == "table" and type(list[1][1]) == "table" then
+                        list = list[1]
+                    end
+                    for _, w in pairs(list) do
+                        if type(w) == "table" and w.name and w.isActive == false then
+                            WeatherRemotes.BuyWeather:FireServer(w.name)
+                            task.wait(0.5)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- Task: Auto Buy Totems (Stand Alone)
+task.spawn(function()
+    local TotemEvent = RS:WaitForChild("TotemRemotes", 5) and RS.TotemRemotes:WaitForChild("BuyTotem")
+    local totemList = {"Shiny Totem", "Mutation Totem", "Luck Totem"}
+    while task.wait(5) do
+        if ShopTab.AutoTotem and TotemEvent then
+            for _, totem in ipairs(totemList) do
+                pcall(function()
+                    TotemEvent:InvokeServer(totem)
+                    task.wait(0.5)
+                end)
+            end
+        end
+    end
+end)
+
+-- Task: Auto Spin Ability (Target Dropdown Logic)
+task.spawn(function()
+    local SpinEvent = RS:WaitForChild("FishingSystem", 5) 
+    if SpinEvent then SpinEvent = SpinEvent:WaitForChild("AbilityRemotes"):WaitForChild("SpinAbility") end
+    
+    while task.wait(2) do
+        if ShopTab.AutoSpin and SpinEvent then
+            local success, result = pcall(function() return SpinEvent:InvokeServer() end)
+            if success and type(result) == "table" then
+                if result.success == true then
+                    local abilityData = result.ability
+                    if abilityData and abilityData.Name then
+                        
+                        -- Cek apakah ability yang didapatkan sesuai dengan dropdown target
+                        local isTargetMatch = false
+                        if ShopTab.TargetAbility == "Both" then
+                            if abilityData.Name == "Divine" or abilityData.Name == "Supernova" then isTargetMatch = true end
+                        else
+                            if abilityData.Name == ShopTab.TargetAbility then isTargetMatch = true end
+                        end
+                        
+                        -- Jika mendapat ability yang diincar, matikan spin
+                        if isTargetMatch then
+                            ShopTab.AutoSpin = false
+                            if spinButtonRef then
+                                spinButtonRef.Text = "Auto Spin Ability [OFF]"
+                                spinButtonRef.BackgroundColor3 = C3(220,220,220)
+                                spinButtonRef.TextColor3 = C3(80,80,80)
+                            end
+                            FishBot:ShowMsg("Mendapatkan " .. abilityData.Name .. "! Spin dihentikan.", Color3.new(1, 0.8, 0))
+                        end
+                    end
+                elseif result.success == false then
+                    if result.reason and string.find(result.reason, "Coins tidak cukup") then
+                        ShopTab.AutoSpin = false
+                        if spinButtonRef then
+                            spinButtonRef.Text = "Auto Spin Ability [OFF]"
+                            spinButtonRef.BackgroundColor3 = C3(220,220,220)
+                            spinButtonRef.TextColor3 = C3(80,80,80)
+                        end
+                        FishBot:ShowMsg("Koin tidak cukup! Auto Spin berhenti.", C3(255, 59, 48))
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- Task: Auto Combo (Buy -> Place -> Wait)
+task.spawn(function()
+    local totemList = {"Shiny Totem", "Luck Totem", "Mutation Totem"}
+    while task.wait(1) do
+        if ShopTab.AutoPlaceTotem then
+            local TotemRemotes = RS:WaitForChild("TotemRemotes", 5) 
+            if TotemRemotes then
+                local BuyEvt = TotemRemotes:FindFirstChild("BuyTotem")
+                local SpawnEvt = TotemRemotes:FindFirstChild("SpawnTotemRequest")
+                local char = P.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                
+                if hrp and BuyEvt and SpawnEvt then
+                    for _, totem in ipairs(totemList) do
+                        for i = 1, 5 do
+                            pcall(function() BuyEvt:InvokeServer(totem) end)
+                            task.wait(0.1) 
+                        end
+                    end
+                    
+                    local placePos = hrp.Position + (hrp.CFrame.RightVector * 5) - Vector3.new(0, 3, 0)
+                    for _, totem in ipairs(totemList) do
+                        for i = 1, 5 do
+                            pcall(function() SpawnEvt:FireServer(totem, placePos, 3600) end)
+                            task.wait(0.1) 
+                        end
+                    end
+                    
+                    if FishBot and FishBot.ShowMsg then
+                        FishBot:ShowMsg("15 Totem Placed! Menunggu " .. ShopTab.TotemDelay .. " detik...", C3(52,199,89))
+                    end
+                    
+                    local waited = 0
+                    while waited < ShopTab.TotemDelay and ShopTab.AutoPlaceTotem do
+                        task.wait(1)
+                        waited = waited + 1
+                    end
+                end
+            end
         end
     end
 end)
