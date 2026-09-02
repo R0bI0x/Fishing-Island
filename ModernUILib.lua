@@ -28,9 +28,18 @@ local Players            = game:GetService("Players")
 local CoreGui            = game:GetService("CoreGui")
 local RunService         = game:GetService("RunService")
 local HttpService        = game:GetService("HttpService")
-local GuiService         = game:GetService("GuiService")
 
+-- LocalPlayer kadang belum ke-assign kalau script jalan kepagian (edge case
+-- di beberapa executor yang inject sebelum game fully loaded). Tunggu bentar.
 local LocalPlayer = Players.LocalPlayer
+if not LocalPlayer then
+    local waited = 0
+    while not LocalPlayer and waited < 5 do
+        task.wait(0.1)
+        waited = waited + 0.1
+        LocalPlayer = Players.LocalPlayer
+    end
+end
 
 ------------------------------------------------------------
 -- SAFE CALLS (biar gak error di executor yang beda-beda)
@@ -46,6 +55,14 @@ local readfile    = readfile or function() return nil end
 local isfile       = isfile or function() return false end
 local makefolder  = makefolder or function() end
 local isfolder     = isfolder or function() return false end
+
+-- Fallback buat executor lama yang belum kenal task scheduler
+local task = task or {
+    wait = function(t) return wait(t) end,
+    delay = function(t, fn) return delay(t, fn) end,
+    spawn = function(fn) return spawn(fn) end,
+    defer = function(fn) return spawn(fn) end,
+}
 
 ------------------------------------------------------------
 -- DEVICE DETECTION (RESPONSIF)
@@ -251,13 +268,61 @@ end
 ------------------------------------------------------------
 -- ROOT GUI
 ------------------------------------------------------------
+local _cachedGuiParent = nil
+
+local function testParent(target)
+    if not target then return false end
+    local test = safeCall(Instance.new, "Folder")
+    if not test then return false end
+    local ok = pcall(function() test.Parent = target end)
+    if ok then
+        safeCall(function() test:Destroy() end)
+    end
+    return ok
+end
+
 local function getGuiParent()
+    if _cachedGuiParent then return _cachedGuiParent end
+
+    -- Urutan prioritas: gethui() (executor modern) -> CoreGui -> PlayerGui (fallback universal)
     if gethui then
-        return safeCall(gethui) or CoreGui
-    elseif syn and syn.protect_gui then
+        local hui = safeCall(gethui)
+        if hui and testParent(hui) then
+            _cachedGuiParent = hui
+            return hui
+        end
+    end
+
+    if testParent(CoreGui) then
+        _cachedGuiParent = CoreGui
         return CoreGui
     end
+
+    if LocalPlayer then
+        local playerGui = safeCall(function() return LocalPlayer:FindFirstChildOfClass("PlayerGui") end)
+        if not playerGui then
+            playerGui = safeCall(function() return LocalPlayer:WaitForChild("PlayerGui", 5) end)
+        end
+        if playerGui and testParent(playerGui) then
+            _cachedGuiParent = playerGui
+            return playerGui
+        end
+    end
+
+    -- Last resort: tetep balikin CoreGui meskipun test gagal, biar gak nil
+    -- (beberapa executor lolos parenting walau test awal gagal karena timing)
+    _cachedGuiParent = CoreGui
     return CoreGui
+end
+
+-- Sebagian besar executor (Synapse X) pakai syn.protect_gui, sebagian lain
+-- expose fungsi global protectgui. Coba dua-duanya, aman kalau gak ada.
+local function protectGui(gui)
+    if syn and syn.protect_gui then
+        safeCall(syn.protect_gui, gui)
+    elseif protectgui then
+        safeCall(protectgui, gui)
+    end
 end
 
 ------------------------------------------------------------
@@ -272,7 +337,7 @@ local function ensureNotifHolder()
         ZIndexBehavior = Enum.ZIndexBehavior.Global,
         DisplayOrder = 999,
     }, getGuiParent())
-    if syn and syn.protect_gui then safeCall(syn.protect_gui, screenGui) end
+    protectGui(screenGui)
 
     NotifHolder = make("Frame", {
         Name = "Holder",
@@ -391,7 +456,7 @@ function Library:CreateWindow(config)
         ZIndexBehavior = Enum.ZIndexBehavior.Global,
         DisplayOrder = 100,
     }, getGuiParent())
-    if syn and syn.protect_gui then safeCall(syn.protect_gui, screenGui) end
+    protectGui(screenGui)
 
     local winWidth = isMobileDevice and 520 or 620
     local winHeight = isMobileDevice and 340 or 400
@@ -495,7 +560,7 @@ function Library:CreateWindow(config)
             ZIndexBehavior = Enum.ZIndexBehavior.Global,
             DisplayOrder = 150,
         }, getGuiParent())
-        if syn and syn.protect_gui then safeCall(syn.protect_gui, IconGui) end
+        protectGui(IconGui)
 
         ToggleIcon = make("TextButton", {
             Name = "ToggleIcon",
@@ -651,13 +716,22 @@ function Library:CreateWindow(config)
 
     -- Footer: info player + nama game, kayak script hub pada umumnya
     if showFooter then
-        local ok, userId = pcall(function() return LocalPlayer.UserId end)
+        local displayName = "Player"
+        local username = "unknown"
         local thumb = ""
-        if ok then
-            local okThumb, content = pcall(function()
-                return Players:GetUserThumbnailAsync(userId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
-            end)
-            if okThumb then thumb = content end
+
+        if LocalPlayer then
+            displayName = safeCall(function() return LocalPlayer.DisplayName end)
+                or safeCall(function() return LocalPlayer.Name end)
+                or "Player"
+            username = safeCall(function() return LocalPlayer.Name end) or "unknown"
+            local ok, userId = pcall(function() return LocalPlayer.UserId end)
+            if ok and userId then
+                local okThumb, content = pcall(function()
+                    return Players:GetUserThumbnailAsync(userId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
+                end)
+                if okThumb then thumb = content end
+            end
         end
 
         local Footer = make("Frame", {
@@ -680,7 +754,7 @@ function Library:CreateWindow(config)
             Size = UDim2.new(1, -48, 0, 16),
             Position = UDim2.new(0, 46, 0, 6),
             Font = Theme.FontBold,
-            Text = LocalPlayer.DisplayName or LocalPlayer.Name,
+            Text = displayName,
             TextColor3 = Theme.Text,
             TextSize = 12,
             TextXAlignment = Enum.TextXAlignment.Left,
@@ -692,7 +766,7 @@ function Library:CreateWindow(config)
             Size = UDim2.new(1, -48, 0, 14),
             Position = UDim2.new(0, 46, 0, 24),
             Font = Theme.Font,
-            Text = "@" .. LocalPlayer.Name,
+            Text = "@" .. username,
             TextColor3 = Theme.SubText,
             TextSize = 10,
             TextXAlignment = Enum.TextXAlignment.Left,
@@ -1339,6 +1413,8 @@ function Library:CreateWindow(config)
                 end
             end)
 
+            Window.FlagCallbacks[flag] = function(v) selected = v; Window.FlagValues[flag] = v; refreshLabel(); rebuildOptions() end
+
             return {
                 Instance = Holder,
                 Set = function(_, v) selected = v; Window.FlagValues[flag] = v; refreshLabel(); rebuildOptions() end,
@@ -1390,6 +1466,8 @@ function Library:CreateWindow(config)
                 local ok, err = pcall(callback, Box.Text, enterPressed)
                 if not ok then warn("[ModernUILib] Textbox callback error: " .. tostring(err)) end
             end)
+
+            Window.FlagCallbacks[flag] = function(v) Box.Text = v; Window.FlagValues[flag] = v end
 
             return {
                 Instance = Holder,
@@ -1455,6 +1533,8 @@ function Library:CreateWindow(config)
                     if not ok then warn("[ModernUILib] Keybind callback error: " .. tostring(err)) end
                 end
             end)
+
+            Window.FlagCallbacks[flag] = function(keycode) currentKey = keycode; BindBtn.Text = keycode.Name; Window.FlagValues[flag] = keycode end
 
             return {
                 Instance = Holder,
@@ -1592,9 +1672,17 @@ function Library:CreateWindow(config)
                 end
             end)
 
+            local function externalSet(c)
+                currentColor = c
+                Swatch.BackgroundColor3 = c
+                Window.FlagValues[flag] = c
+                h, s, v = Color3.toHSV(c)
+            end
+            Window.FlagCallbacks[flag] = externalSet
+
             return {
                 Instance = Holder,
-                Set = function(_, c) currentColor = c; Swatch.BackgroundColor3 = c; Window.FlagValues[flag] = c end,
+                Set = function(_, c) externalSet(c) end,
                 Get = function() return currentColor end,
             }
         end
@@ -2055,6 +2143,14 @@ function Library:CreateWindow(config)
             end
 
             Window.FlagValues[flag] = values
+            Window.FlagCallbacks[flag] = function(newValues)
+                if type(newValues) ~= "table" then return end
+                for fname, v in pairs(newValues) do
+                    values[fname] = v
+                    if boxes[fname] then boxes[fname].Text = tostring(v) end
+                end
+                Window.FlagValues[flag] = values
+            end
 
             return {
                 Instance = Holder,
@@ -2162,6 +2258,8 @@ function Library:CreateWindow(config)
                 end)
             end
 
+            Window.FlagCallbacks[flag] = function(v) selected = v; Window.FlagValues[flag] = v; refresh() end
+
             return {
                 Instance = Holder,
                 Set = function(_, v) selected = v; Window.FlagValues[flag] = v; refresh() end,
@@ -2200,6 +2298,7 @@ function Library:CreateWindow(config)
             make("UIListLayout", {Padding = UDim.new(0, 2), SortOrder = Enum.SortOrder.LayoutOrder}, ListHolder)
 
             local state = {}
+            local boxRefs = {}
             for _, opt in ipairs(list) do state[opt] = defaults[opt] or false end
             Window.FlagValues[flag] = state
 
@@ -2241,6 +2340,8 @@ function Library:CreateWindow(config)
                     TextXAlignment = Enum.TextXAlignment.Left,
                 }, Row)
 
+                boxRefs[opt] = {Box = Box, Check = Check}
+
                 Row.MouseButton1Click:Connect(function()
                     state[opt] = not state[opt]
                     Window.FlagValues[flag] = state
@@ -2249,6 +2350,19 @@ function Library:CreateWindow(config)
                     local ok, err = pcall(callback, state)
                     if not ok then warn("[ModernUILib] CheckboxList callback error: " .. tostring(err)) end
                 end)
+            end
+
+            Window.FlagCallbacks[flag] = function(newState)
+                if type(newState) ~= "table" then return end
+                for opt, v in pairs(newState) do
+                    state[opt] = v
+                    local ref = boxRefs[opt]
+                    if ref then
+                        ref.Box.BackgroundColor3 = v and Theme.Accent or Theme.Sidebar
+                        ref.Check.TextTransparency = v and 0 or 1
+                    end
+                end
+                Window.FlagValues[flag] = state
             end
 
             return {
@@ -2340,6 +2454,8 @@ function Library:CreateWindow(config)
                 local n = tonumber(ValueBox.Text)
                 if n then setValue(n) else ValueBox.Text = tostring(value) end
             end)
+
+            Window.FlagCallbacks[flag] = function(v) setValue(v) end
 
             return {
                 Instance = Holder,
@@ -2459,6 +2575,14 @@ function Library:CreateWindow(config)
             end
             bindHandle(LowHandle, true)
             bindHandle(HighHandle, false)
+
+            Window.FlagCallbacks[flag] = function(v)
+                if type(v) == "table" and v.Low and v.High then
+                    lowVal, highVal = v.Low, v.High
+                    redraw()
+                    Window.FlagValues[flag] = {Low = lowVal, High = highVal}
+                end
+            end
 
             return {
                 Instance = Holder,
@@ -2809,13 +2933,20 @@ function Library:CreateWindow(config)
         name = name or "default"
         local data = {}
         for flag, value in pairs(Window.FlagValues) do
-            if typeof(value) == "EnumItem" then
-                data[flag] = {__type = "EnumItem", value = value.Name}
-            elseif typeof(value) == "Color3" then
+            local ok, vtype = pcall(typeof, value)
+            if ok and vtype == "EnumItem" then
+                local enumName = tostring(value.EnumType):gsub("^Enum%.", "")
+                data[flag] = {__type = "EnumItem", enum = enumName, value = value.Name}
+            elseif ok and vtype == "Color3" then
                 data[flag] = {__type = "Color3", r = value.R, g = value.G, b = value.B}
-            else
+            elseif ok and (vtype == "string" or vtype == "number" or vtype == "boolean") then
                 data[flag] = value
+            elseif ok and vtype == "table" then
+                -- table biasa (misal hasil CheckboxList/InputGroup), aman buat JSON selama isinya primitif
+                local jsonOk = pcall(HttpService.JSONEncode, HttpService, value)
+                if jsonOk then data[flag] = value end
             end
+            -- tipe lain (Instance, function, dll) sengaja dilewati, gak bisa di-JSON-kan
         end
         local ok, encoded = pcall(HttpService.JSONEncode, HttpService, data)
         if ok then
@@ -2832,17 +2963,21 @@ function Library:CreateWindow(config)
         local content = safeCall(readfile, path)
         if not content then return false end
         local ok, data = pcall(HttpService.JSONDecode, HttpService, content)
-        if not ok then return false end
+        if not ok or type(data) ~= "table" then return false end
 
         for flag, value in pairs(data) do
             local realValue = value
             if type(value) == "table" and value.__type == "EnumItem" then
-                realValue = nil -- can't fully restore arbitrary enum without category; skip safely
+                local enumCategory = Enum[value.enum]
+                realValue = enumCategory and enumCategory[value.value] or nil
             elseif type(value) == "table" and value.__type == "Color3" then
                 realValue = Color3.new(value.r, value.g, value.b)
             end
             if realValue ~= nil and Window.FlagCallbacks[flag] then
-                Window.FlagCallbacks[flag](realValue, false)
+                local applyOk, applyErr = pcall(Window.FlagCallbacks[flag], realValue, false)
+                if not applyOk then
+                    warn("[ModernUILib] Gagal load config buat flag '" .. tostring(flag) .. "': " .. tostring(applyErr))
+                end
             end
         end
         return true
@@ -2866,7 +3001,7 @@ function Library:CreateWatermark(opts)
         ZIndexBehavior = Enum.ZIndexBehavior.Global,
         DisplayOrder = 200,
     }, getGuiParent())
-    if syn and syn.protect_gui then safeCall(syn.protect_gui, screenGui) end
+    protectGui(screenGui)
 
     local Bar = make("Frame", {
         Size = UDim2.new(0, 220, 0, 26),
@@ -2972,7 +3107,7 @@ function Library:CreateKeySystem(opts)
         ZIndexBehavior = Enum.ZIndexBehavior.Global,
         DisplayOrder = 300,
     }, getGuiParent())
-    if syn and syn.protect_gui then safeCall(syn.protect_gui, screenGui) end
+    protectGui(screenGui)
 
     local Overlay = make("Frame", {
         Size = UDim2.new(1, 0, 1, 0),
