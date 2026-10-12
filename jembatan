@@ -1,0 +1,247 @@
+local P = game:GetService("Players").LocalPlayer
+local CG = game:GetService("CoreGui")
+local RS = game:GetService("ReplicatedStorage")
+local TS = game:GetService("TweenService")
+local RunS = game:GetService("RunService")
+local VU = game:GetService("VirtualUser")
+
+_G.CapturedSessionToken = nil
+local oldNamecall
+oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+    local method = getnamecallmethod()
+    if method == "InvokeServer" and self.Name == "RequestFishingSession" then
+        local result = {oldNamecall(self, ...)}
+        local token = result[1]
+        
+        if type(token) == "table" then
+            token = token[1] or token.sessionToken
+        end
+        
+        if type(token) == "string" then
+            _G.CapturedSessionToken = token
+        end
+        
+        return unpack(result)
+    end
+    return oldNamecall(self, ...)
+end)
+
+if CG:FindFirstChild("MacOSFishGUI") then CG.MacOSFishGUI:Destroy() end
+
+local C3, U2 = Color3.fromRGB, UDim2.new
+local F_G, F_GM = Enum.Font.Gotham, Enum.Font.GothamMedium
+
+local function C(cls, props)
+    local o = Instance.new(cls)
+    for k, v in pairs(props or {}) do
+        if type(k) == "number" then v.Parent = o
+        elseif k == "Click" then o.MouseButton1Click:Connect(v)
+        elseif k == "Focus" then o.FocusLost:Connect(v)
+        else o[k] = v end
+    end
+    return o
+end
+
+local UI = { Tabs = {}, Frames = {} }
+UI.SG = C("ScreenGui", {Name="MacOSFishGUI", Parent=CG})
+UI.MF = C("Frame", {Parent=UI.SG, Size=U2(0,360,0,350), Position=U2(0.5,-180,0.5,-175), BackgroundColor3=C3(245,245,245), Active=true, Draggable=true, ClipsDescendants=true, C("UICorner",{CornerRadius=UDim.new(0,12)}), C("UIStroke",{Color=C3(220,220,220)})})
+UI.TB = C("Frame", {Parent=UI.MF, Size=U2(1,0,0,30), BackgroundTransparency=1})
+C("TextButton", {Parent=UI.TB, Size=U2(0,12,0,12), Position=U2(0,12,0.5,-6), BackgroundColor3=C3(255,95,86), Text="", C("UICorner",{CornerRadius=UDim.new(1,0)}), Click=function() UI.SG:Destroy() end})
+C("TextButton", {Parent=UI.TB, Size=U2(0,12,0,12), Position=U2(0,32,0.5,-6), BackgroundColor3=C3(255,189,46), Text="", C("UICorner",{CornerRadius=UDim.new(1,0)}), Click=function() UI.Min = not UI.Min; UI.CC.Visible = not UI.Min; UI.MF:TweenSize(U2(0,360,0,UI.Min and 30 or 350), "Out", "Quad", 0.3, true) end})
+C("Frame", {Parent=UI.TB, Size=U2(0,12,0,12), Position=U2(0,52,0.5,-6), BackgroundColor3=C3(39,201,63), C("UICorner",{CornerRadius=UDim.new(1,0)})})
+C("TextLabel", {Parent=UI.TB, Size=U2(1,0,1,0), BackgroundTransparency=1, Text="Jembatan Viral ~ KemplongXD", TextColor3=C3(100,100,100), Font=F_GM, TextSize=12})
+UI.TabC = C("Frame", {Parent=UI.MF, Size=U2(0,320,0,24), Position=U2(0.5,-160,0,35), BackgroundColor3=C3(225,225,225), C("UICorner",{CornerRadius=UDim.new(0,6)})})
+UI.CC = C("Frame", {Parent=UI.MF, Size=U2(1,0,1,-70), Position=U2(0,0,0,70), BackgroundTransparency=1})
+
+function UI:AddTab(name, pos, active)
+    local btn = C("TextButton", {Parent=self.TabC, Size=U2(0.5,0,1,0), Position=pos, BackgroundTransparency=active and 0 or 1, BackgroundColor3=C3(255,255,255), Text=name, TextColor3=active and C3(50,50,50) or C3(120,120,120), Font=F_GM, TextSize=10, C("UICorner",{CornerRadius=UDim.new(0,6)})})
+    local frm = C("Frame", {Parent=self.CC, Size=U2(1,0,1,0), BackgroundTransparency=1, Visible=active})
+    table.insert(self.Tabs, btn)
+    table.insert(self.Frames, frm)
+    btn.MouseButton1Click:Connect(function()
+        for i, t in ipairs(self.Tabs) do t.BackgroundTransparency=1; t.TextColor3=C3(120,120,120); self.Frames[i].Visible=false end
+        btn.BackgroundTransparency=0; btn.TextColor3=C3(50,50,50); frm.Visible=true
+    end)
+    return frm
+end
+
+local FishBot = { Frm = UI:AddTab("Auto Fish", U2(0,0,0,0), true), Active = false, Rod = nil, Caught = 0, Dist = 20, SessionDelay = 0.3 }
+
+local function MkInp(frm, y, txt, def, cb) 
+    C("TextLabel", {Parent=frm, Size=U2(0,120,0,25), Position=U2(0,20,0,y), BackgroundTransparency=1, Text=txt, TextColor3=C3(80,80,80), Font=F_G, TextSize=13, TextXAlignment=0});
+    local box = C("TextBox", {Parent=frm, Size=U2(0,150,0,25), Position=U2(1,-170,0,y), BackgroundColor3=C3(255,255,255), Text=def, TextColor3=C3(50,50,50), Font=F_G, TextSize=13, C("UICorner",{CornerRadius=UDim.new(0,6)}), C("UIStroke",{Color=C3(210,210,210)})})
+    box.FocusLost:Connect(function() cb(box) end)
+    return box
+end
+
+FishBot.TxtDist = MkInp(FishBot.Frm, 10, "Distance (studs):", "20", function(b) FishBot.Dist = tonumber(b.Text) or 20; b.Text=tostring(FishBot.Dist) end)
+FishBot.TxtSessDelay = MkInp(FishBot.Frm, 50, "Session Delay (s):", "0.3", function(b) FishBot.SessionDelay = tonumber(b.Text) or 0.3; b.Text=tostring(FishBot.SessionDelay) end)
+C("TextLabel", {Parent=FishBot.Frm, Size=U2(0,120,0,25), Position=U2(0,20,0,90), BackgroundTransparency=1, Text="Equipped Rod:", TextColor3=C3(80,80,80), Font=F_G, TextSize=13, TextXAlignment=0})
+FishBot.LblRod = C("TextLabel", {Parent=FishBot.Frm, Size=U2(0,150,0,25), Position=U2(1,-170,0,90), BackgroundColor3=C3(235,235,235), Text="Detecting...", TextColor3=C3(100,100,100), Font=F_GM, TextSize=12, C("UICorner",{CornerRadius=UDim.new(0,6)}), C("UIStroke",{Color=C3(210,210,210)})})
+FishBot.Btn = C("TextButton", {Parent=FishBot.Frm, Size=U2(0,320,0,40), Position=U2(0.5,-160,0,130), BackgroundColor3=C3(180,180,180), Text="Lock: Equip Rod", TextColor3=C3(255,255,255), Font=F_GM, TextSize=14, AutoButtonColor=false, C("UICorner",{CornerRadius=UDim.new(0,8)}), Click=function() FishBot:Start() end})
+
+-- Elemen UI baru untuk menampilkan Token
+C("TextLabel", {Parent=FishBot.Frm, Size=U2(1,-40,0,20), Position=U2(0,20,0,180), BackgroundTransparency=1, Text="Last Session Token:", TextColor3=C3(80,80,80), Font=F_G, TextSize=12, TextXAlignment=0})
+FishBot.TxtToken = C("TextBox", {Parent=FishBot.Frm, Size=U2(1,-40,0,25), Position=U2(0,20,0,200), BackgroundColor3=C3(235,235,235), Text="None", TextColor3=C3(100,100,100), Font=F_GM, TextSize=10, ClearTextOnFocus=false, TextEditable=false, C("UICorner",{CornerRadius=UDim.new(0,6)}), C("UIStroke",{Color=C3(210,210,210)})})
+
+-- Menggeser notifikasi ke bawah
+FishBot.Notif = C("TextLabel", {Parent=FishBot.Frm, Size=U2(1,0,0,20), Position=U2(0,0,0,235), BackgroundTransparency=1, Text="", TextColor3=C3(52,199,89), Font=F_GM, TextSize=12, TextTransparency=1})
+
+function FishBot:ShowMsg(msg, col) 
+    self.Notif.Text=msg; 
+    self.Notif.TextColor3=col or C3(52,199,89); 
+    TS:Create(self.Notif,TweenInfo.new(0.2),{TextTransparency=0}):Play();
+    task.delay(0.7, function() TS:Create(self.Notif,TweenInfo.new(0.5),{TextTransparency=1}):Play() end) 
+end
+
+function FishBot:Start()
+    if not self.Rod then return end;
+    self.Active = not self.Active
+    self.Btn.Text = self.Active and "Stop Fishing" or "Start Fishing"
+    self.Btn.BackgroundColor3 = self.Active and C3(255,59,48) or C3(0,122,255)
+    if self.Active then task.spawn(function() while self.Active and self.Rod do self:Loop(); task.wait(1) end end) end
+end
+
+function FishBot:Loop()
+    local c = P.Character
+    local h = c and c:FindFirstChild("HumanoidRootPart")
+    
+    if not h or not self.Rod then return end
+    
+    local tp = h.Position + (h.CFrame.LookVector * self.Dist) - Vector3.new(0, 2, 0)
+    local res = "Gagal menangkap ikan"
+    local successCatch = false
+    
+    local s, err = pcall(function()
+        local FS = RS:WaitForChild("FishingSystem", 3)
+        if not FS then return end
+
+        local equippedRod = c:FindFirstChild(self.Rod)
+        if not equippedRod then return end
+        
+        local castPower = 93.524731248617
+        local castPowerFloat = castPower / 100
+
+        local CastEvent = FS:FindFirstChild("CastReplication") or FS:FindFirstChild("RE/CastReplication")
+        if CastEvent then
+            CastEvent:FireServer(
+                tp,
+                h.Position,
+                self.Rod,
+                castPower
+            )
+            task.wait(1.5) 
+        end
+        
+        if not c:FindFirstChild(self.Rod) then return end
+
+        local sessionResponse = nil
+        local RequestSession = FS:FindFirstChild("RequestFishingSession")
+        if RequestSession then
+            sessionResponse = RequestSession:InvokeServer(
+                self.Rod,
+                castPowerFloat,
+                tp
+            )
+        end
+        
+        local sessionToken = sessionResponse
+        if type(sessionToken) == "table" then
+            sessionToken = sessionToken[1] or sessionToken.sessionToken
+        end
+
+        task.wait(FishBot.SessionDelay)
+
+        pcall(function()
+            local AbilityEvent = FS:FindFirstChild("AbilityRemotes") and FS.AbilityRemotes:FindFirstChild("NotifyAbilityCast")
+            if AbilityEvent then 
+                AbilityEvent:FireServer() 
+                task.wait(0.2)
+            end
+        end)
+        
+        if type(sessionToken) == "string" then
+            _G.CapturedSessionToken = sessionToken
+            res = "Caught! [Token Acquired]"
+            successCatch = true
+        end
+        
+        local CleanupEvent = FS:FindFirstChild("CleanupCast") or FS:FindFirstChild("RE/CleanupCast")
+        if CleanupEvent then 
+            CleanupEvent:FireServer() 
+            task.wait(0.2)
+        end
+        
+        local FishGiver = FS:FindFirstChild("FishGiver") or FS:FindFirstChild("RE/FishGiver")
+        if FishGiver and sessionToken then
+            FishGiver:FireServer({
+                hookPosition = tp,
+                sessionToken = sessionToken
+            })
+            task.wait(0.2)
+        end
+        
+        local SuccessEvent = RS:FindFirstChild("FishingCatchSuccess")
+        if SuccessEvent then 
+            SuccessEvent:FireServer() 
+            task.wait(0.2)
+        end
+    end)
+    
+    if s and successCatch and self.Active then 
+        self.Caught = self.Caught + 1
+        self:ShowMsg(res) 
+    end
+end
+
+local MiscTools = { Frm = UI:AddTab("Misc", U2(0.5,0,0,0), false), AFK=false, SW=false, SWPart=C("Part",{Parent=workspace,Size=Vector3.new(15,1,15),Anchored=true,Transparency=0.5,CanCollide=false}) }
+local function MkTgl(y, txt, cb) 
+    local s=false;
+    local b=C("TextButton",{Parent=MiscTools.Frm, Size=U2(1,-40,0,35), Position=U2(0,20,0,y), BackgroundColor3=C3(220,220,220), Text=txt.." [OFF]", TextColor3=C3(80,80,80), Font=F_GM, TextSize=13, C("UICorner",{CornerRadius=UDim.new(0,6)})});
+    b.MouseButton1Click:Connect(function() s=not s; b.Text=txt..(s and" [ON]"or" [OFF]"); b.BackgroundColor3=s and C3(0,122,255) or C3(220,220,220); b.TextColor3=s and C3(255,255,255) or C3(80,80,80); cb(s) end) 
+end
+
+MkTgl(20, "Anti AFK", function(v) MiscTools.AFK=v end);
+P.Idled:Connect(function() if MiscTools.AFK then VU:CaptureController(); VU:ClickButton2(Vector2.new()) end end)
+MkTgl(65, "Skywalk Platform", function(v) MiscTools.SW=v end)
+
+C("TextButton",{Parent=MiscTools.Frm, Size=U2(1,-40,0,35), Position=U2(0,20,0,110), BackgroundColor3=C3(0,122,255), Text="Boost FPS (Remove Textures)", TextColor3=C3(255,255,255), Font=F_GM, TextSize=13, C("UICorner",{CornerRadius=UDim.new(0,6)}), Click=function() game.Lighting.GlobalShadows=false; for _,v in pairs(workspace:GetDescendants()) do if v:IsA("BasePart") then v.Material=Enum.Material.SmoothPlastic; v.Reflectance=0 elseif v:IsA("Decal") or v:IsA("Texture") then v.Transparency=1 end end end})
+
+task.spawn(function()
+    while task.wait(0.5) do
+        -- Update UI Token jika ada token baru
+        if _G.CapturedSessionToken and FishBot.TxtToken.Text ~= _G.CapturedSessionToken then
+            FishBot.TxtToken.Text = _G.CapturedSessionToken
+        end
+
+        local t = P.Character and P.Character:FindFirstChildOfClass("Tool")
+        FishBot.Rod = t and t.Name or nil
+        if FishBot.Rod then 
+            FishBot.LblRod.Text = FishBot.Rod;
+            FishBot.LblRod.TextColor3 = C3(0,122,255); 
+            if not FishBot.Active then 
+                FishBot.Btn.BackgroundColor3 = C3(0,122,255);
+                FishBot.Btn.Text = "Start Fishing";
+                FishBot.Btn.AutoButtonColor = true 
+            end
+        else 
+            FishBot.LblRod.Text = "Not Equipped";
+            FishBot.LblRod.TextColor3 = C3(255,59,48);
+            FishBot.Btn.BackgroundColor3 = C3(180,180,180); 
+            FishBot.Btn.Text = "Lock: Equip Rod";
+            FishBot.Btn.AutoButtonColor = false 
+        end
+        if FishBot.Active and not FishBot.Rod then 
+            FishBot.Active = false;
+            FishBot:ShowMsg("Rod Unequipped! Stopped.", C3(255,59,48)) 
+        end
+    end
+end)
+
+RunS.RenderStepped:Connect(function(dt)
+    if MiscTools.SW and P.Character and P.Character:FindFirstChild("HumanoidRootPart") then 
+        MiscTools.SWPart.CanCollide=true; MiscTools.SWPart.CFrame=CFrame.new(P.Character.HumanoidRootPart.Position - Vector3.new(0,3.5,0)) 
+    else 
+        MiscTools.SWPart.CanCollide=false 
+    end
+end)

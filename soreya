@@ -1,0 +1,498 @@
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
+local Lighting = game:GetService("Lighting")
+local Terrain = workspace:FindFirstChildOfClass("Terrain")
+local LocalPlayer = Players.LocalPlayer
+
+-- Hapus GUI lama jika sudah ada
+if CoreGui:FindFirstChild("KemplongXD") then
+    CoreGui.KemplongXD:Destroy()
+end
+
+-- Sistem Anti-AFK Otomatis
+LocalPlayer.Idled:Connect(function()
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
+end)
+
+local KemplongXD = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local UICorner_Main = Instance.new("UICorner")
+local TopBar = Instance.new("Frame")
+local UICorner_Top = Instance.new("UICorner")
+local Title = Instance.new("TextLabel")
+local ToggleButton = Instance.new("TextButton")
+local UICorner_Toggle = Instance.new("UICorner")
+local CloseBtn = Instance.new("TextButton")
+local UICorner_Close = Instance.new("UICorner")
+local MinBtn = Instance.new("TextButton")
+local UICorner_Min = Instance.new("UICorner")
+local MaxBtn = Instance.new("Frame")
+local UICorner_Max = Instance.new("UICorner")
+
+-- Variabel untuk Dropdown Teleport
+local DropdownMain = Instance.new("TextButton")
+local UICorner_DropMain = Instance.new("UICorner")
+local DropdownList = Instance.new("Frame")
+local UICorner_DropList = Instance.new("UICorner")
+
+local Spot1Btn = Instance.new("TextButton") -- Spot Sell
+local Spot2Btn = Instance.new("TextButton") -- Spot Mancing
+local Spot3Btn = Instance.new("TextButton") -- Spot Core
+
+-- Variabel untuk Tombol FPS Booster & Reset Grafik
+local FpsBtn = Instance.new("TextButton")
+local UICorner_Fps = Instance.new("UICorner")
+local ResetGfxBtn = Instance.new("TextButton")
+local UICorner_ResetGfx = Instance.new("UICorner")
+
+-- Variabel untuk Tombol Delete Cutscene
+local DelCutsceneBtn = Instance.new("TextButton")
+local UICorner_DelCutscene = Instance.new("UICorner")
+
+KemplongXD.Name = "KemplongXD"
+KemplongXD.Parent = CoreGui
+KemplongXD.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = KemplongXD
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.Position = UDim2.new(0.5, -125, 0.5, -125)
+MainFrame.Size = UDim2.new(0, 250, 0, 250)
+MainFrame.ClipsDescendants = false
+MainFrame.Active = true 
+UICorner_Main.CornerRadius = UDim.new(0, 10)
+UICorner_Main.Parent = MainFrame
+
+TopBar.Name = "TopBar"
+TopBar.Parent = MainFrame
+TopBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+TopBar.Size = UDim2.new(1, 0, 0, 30)
+TopBar.Active = true 
+UICorner_Top.CornerRadius = UDim.new(0, 10)
+UICorner_Top.Parent = TopBar
+
+Title.Name = "Title"
+Title.Parent = TopBar
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.new(0, 65, 0, 0)
+Title.Size = UDim2.new(1, -70, 1, 0)
+Title.Font = Enum.Font.GothamBold
+Title.Text = "KemplongXD"
+Title.TextColor3 = Color3.fromRGB(220, 220, 220)
+Title.TextSize = 13
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+CloseBtn.Name = "CloseBtn"
+CloseBtn.Parent = TopBar
+CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 95, 86)
+CloseBtn.Position = UDim2.new(0, 10, 0.5, -6)
+CloseBtn.Size = UDim2.new(0, 12, 0, 12)
+CloseBtn.Text = ""
+UICorner_Close.CornerRadius = UDim.new(1, 0)
+UICorner_Close.Parent = CloseBtn
+
+MinBtn.Name = "MinBtn"
+MinBtn.Parent = TopBar
+MinBtn.BackgroundColor3 = Color3.fromRGB(255, 189, 46)
+MinBtn.Position = UDim2.new(0, 28, 0.5, -6)
+MinBtn.Size = UDim2.new(0, 12, 0, 12)
+MinBtn.Text = ""
+UICorner_Min.CornerRadius = UDim.new(1, 0)
+UICorner_Min.Parent = MinBtn
+
+MaxBtn.Name = "MaxBtn"
+MaxBtn.Parent = TopBar
+MaxBtn.BackgroundColor3 = Color3.fromRGB(39, 201, 63)
+MaxBtn.Position = UDim2.new(0, 46, 0.5, -6)
+MaxBtn.Size = UDim2.new(0, 12, 0, 12)
+UICorner_Max.CornerRadius = UDim.new(1, 0)
+UICorner_Max.Parent = MaxBtn
+
+-- Tombol Auto Fish Utama
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Parent = MainFrame
+ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+ToggleButton.Position = UDim2.new(0.5, -75, 0, 45)
+ToggleButton.Size = UDim2.new(0, 150, 0, 30)
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.Text = "AUTO FISH : OFF"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 12
+UICorner_Toggle.CornerRadius = UDim.new(0, 6)
+UICorner_Toggle.Parent = ToggleButton
+
+-- Tombol Utama Dropdown Teleport
+DropdownMain.Name = "DropdownMain"
+DropdownMain.Parent = MainFrame
+DropdownMain.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+DropdownMain.Position = UDim2.new(0.5, -75, 0, 85)
+DropdownMain.Size = UDim2.new(0, 150, 0, 30)
+DropdownMain.Font = Enum.Font.GothamBold
+DropdownMain.Text = "TELEPORT SPOT v"
+DropdownMain.TextColor3 = Color3.fromRGB(255, 255, 255)
+DropdownMain.TextSize = 12
+UICorner_DropMain.CornerRadius = UDim.new(0, 6)
+UICorner_DropMain.Parent = DropdownMain
+
+-- Frame Kontainer Isi Dropdown
+DropdownList.Name = "DropdownList"
+DropdownList.Parent = MainFrame
+DropdownList.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+DropdownList.Position = UDim2.new(0.5, -75, 0, 120)
+DropdownList.Size = UDim2.new(0, 150, 0, 95)
+DropdownList.Visible = false
+DropdownList.ZIndex = 5
+UICorner_DropList.CornerRadius = UDim.new(0, 6)
+UICorner_DropList.Parent = DropdownList
+
+-- Tombol Spot 1: Spot Sell
+Spot1Btn.Name = "Spot1Btn"
+Spot1Btn.Parent = DropdownList
+Spot1Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Spot1Btn.Position = UDim2.new(0, 5, 0, 5)
+Spot1Btn.Size = UDim2.new(0, 140, 0, 25)
+Spot1Btn.Font = Enum.Font.Gotham
+Spot1Btn.Text = "Spot Sell"
+Spot1Btn.TextColor3 = Color3.fromRGB(220, 220, 220)
+Spot1Btn.TextSize = 11
+Spot1Btn.ZIndex = 6
+
+-- Tombol Spot 2: Spot Mancing
+Spot2Btn.Name = "Spot2Btn"
+Spot2Btn.Parent = DropdownList
+Spot2Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Spot2Btn.Position = UDim2.new(0, 5, 0, 35)
+Spot2Btn.Size = UDim2.new(0, 140, 0, 25)
+Spot2Btn.Font = Enum.Font.Gotham
+Spot2Btn.Text = "Spot Mancing"
+Spot2Btn.TextColor3 = Color3.fromRGB(220, 220, 220)
+Spot2Btn.TextSize = 11
+Spot2Btn.ZIndex = 6
+
+-- Tombol Spot 3: Spot Core
+Spot3Btn.Name = "Spot3Btn"
+Spot3Btn.Parent = DropdownList
+Spot3Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Spot3Btn.Position = UDim2.new(0, 5, 0, 65)
+Spot3Btn.Size = UDim2.new(0, 140, 0, 25)
+Spot3Btn.Font = Enum.Font.Gotham
+Spot3Btn.Text = "Spot Core"
+Spot3Btn.TextColor3 = Color3.fromRGB(220, 220, 220)
+Spot3Btn.TextSize = 11
+Spot3Btn.ZIndex = 6
+
+-- Tombol FPS Booster
+FpsBtn.Name = "FpsBtn"
+FpsBtn.Parent = MainFrame
+FpsBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+FpsBtn.Position = UDim2.new(0.5, -75, 0, 125)
+FpsBtn.Size = UDim2.new(0, 150, 0, 30)
+FpsBtn.Font = Enum.Font.GothamBold
+FpsBtn.Text = "FPS BOOSTER : OFF"
+FpsBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+FpsBtn.TextSize = 12
+UICorner_Fps.CornerRadius = UDim.new(0, 6)
+UICorner_Fps.Parent = FpsBtn
+
+-- Tombol Reset Graphics
+ResetGfxBtn.Name = "ResetGfxBtn"
+ResetGfxBtn.Parent = MainFrame
+ResetGfxBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+ResetGfxBtn.Position = UDim2.new(0.5, -75, 0, 165)
+ResetGfxBtn.Size = UDim2.new(0, 150, 0, 30)
+ResetGfxBtn.Font = Enum.Font.GothamBold
+ResetGfxBtn.Text = "RESET GRAPHICS"
+ResetGfxBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ResetGfxBtn.TextSize = 12
+UICorner_ResetGfx.CornerRadius = UDim.new(0, 6)
+UICorner_ResetGfx.Parent = ResetGfxBtn
+
+-- Tombol Delete Cutscene
+DelCutsceneBtn.Name = "DelCutsceneBtn"
+DelCutsceneBtn.Parent = MainFrame
+DelCutsceneBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+DelCutsceneBtn.Position = UDim2.new(0.5, -75, 0, 205)
+DelCutsceneBtn.Size = UDim2.new(0, 150, 0, 30)
+DelCutsceneBtn.Font = Enum.Font.GothamBold
+DelCutsceneBtn.Text = "DELETE CUTSCENE"
+DelCutsceneBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+DelCutsceneBtn.TextSize = 12
+UICorner_DelCutscene.CornerRadius = UDim.new(0, 6)
+UICorner_DelCutscene.Parent = DelCutsceneBtn
+
+local dragging = false
+local dragInput, mousePos, framePos
+
+TopBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        mousePos = input.Position
+        framePos = MainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+TopBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - mousePos
+        MainFrame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+    end
+end)
+
+local isMinimized = false
+MinBtn.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    DropdownList.Visible = false
+    isDropdownOpen = false
+    DropdownMain.Text = "TELEPORT SPOT v"
+    
+    if isMinimized then
+        MainFrame.Size = UDim2.new(0, 250, 0, 30)
+        for _, child in ipairs(MainFrame:GetChildren()) do
+            if child ~= TopBar and child:IsA("GuiObject") then
+                child.Visible = false
+            end
+        end
+    else
+        MainFrame.Size = UDim2.new(0, 250, 0, 250)
+        for _, child in ipairs(MainFrame:GetChildren()) do
+            if child ~= TopBar and child:IsA("GuiObject") then
+                child.Visible = true
+            end
+        end
+    end
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    isAutoFishing = false
+    KemplongXD:Destroy()
+end)
+
+local isDropdownOpen = false
+DropdownMain.MouseButton1Click:Connect(function()
+    if isMinimized then return end
+    isDropdownOpen = not isDropdownOpen
+    DropdownList.Visible = isDropdownOpen
+    if isDropdownOpen then
+        DropdownMain.Text = "TELEPORT SPOT ^"
+    else
+        DropdownMain.Text = "TELEPORT SPOT v"
+    end
+end)
+
+local function teleportTo(x, y, z)
+    pcall(function()
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = CFrame.new(x, y, z)
+        end
+    end)
+end
+
+Spot1Btn.MouseButton1Click:Connect(function()
+    teleportTo(-6682, 1327, -9908)
+end)
+
+Spot2Btn.MouseButton1Click:Connect(function()
+    teleportTo(-8211, 1282, -6454)
+end)
+
+Spot3Btn.MouseButton1Click:Connect(function()
+    teleportTo(-8793, 1228, -6429)
+end)
+
+DelCutsceneBtn.MouseButton1Click:Connect(function()
+    pcall(function()
+        local fishingModules = ReplicatedStorage:FindFirstChild("Modules") and ReplicatedStorage.Modules:FindFirstChild("Fishing")
+        if fishingModules then
+            local cutscenes = {"CutsceneForgotten", "CutsceneKitsune", "CutsceneSecret", "CutsceneTangkapan"}
+            for _, name in ipairs(cutscenes) do
+                local target = fishingModules:FindFirstChild(name)
+                if target then
+                    target:Destroy()
+                end
+            end
+        end
+        
+        local efekLempar = ReplicatedStorage:FindFirstChild("EfekLemparKenyal")
+        if efekLempar then
+            local vfx = efekLempar:FindFirstChild("VFX")
+            if vfx then
+                vfx:Destroy()
+            end
+        end
+        
+        DelCutsceneBtn.Text = "DELETED !"
+        DelCutsceneBtn.BackgroundColor3 = Color3.fromRGB(39, 201, 63)
+        task.wait(1.5)
+        DelCutsceneBtn.Text = "DELETE CUTSCENE"
+        DelCutsceneBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    end)
+end)
+
+-- Perbaikan Total: FPS Booster yang Menggunakan Metode Aman & Efektif Tanpa Error
+local isFpsBoostActive = false
+
+FpsBtn.MouseButton1Click:Connect(function()
+    isFpsBoostActive = not isFpsBoostActive
+    if isFpsBoostActive then
+        FpsBtn.Text = "FPS BOOSTER : ON"
+        FpsBtn.BackgroundColor3 = Color3.fromRGB(39, 201, 63)
+        
+        pcall(function()
+            local lighting = Lighting
+            local terrain = workspace:FindFirstChildOfClass("Terrain")
+            
+            -- Nonaktifkan efek air yang berat
+            if terrain then
+                terrain.WaterWaveSize = 0
+                terrain.WaterWaveSpeed = 0
+                terrain.WaterReflectance = 0
+                terrain.WaterTransparency = 0
+            end
+            
+            -- Optimasi Lighting
+            lighting.GlobalShadows = false
+            lighting.FogEnd = 9e9
+            lighting.Brightness = 2
+            
+            for _, v in ipairs(lighting:GetChildren()) do
+                if v:IsA("PostEffect") or v:IsA("Sky") or v:IsA("Atmosphere") or v:IsA("BlurEffect") or v:IsA("SunRaysEffect") or v:IsA("ColorCorrectionEffect") then
+                    v.Enabled = false
+                end
+            end
+            
+            -- Sembunyikan atau optimalkan semua objek di dunia game
+            for _, v in ipairs(workspace:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    v.Material = Enum.Material.SmoothPlastic
+                    v.Reflectance = 0
+                    v.CastShadow = false
+                elseif v:IsA("Decal") or v:IsA("Texture") then
+                    v.Transparency = 1
+                elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") or v:IsA("Beam") then
+                    v.Enabled = false
+                end
+            end
+            
+            -- Pembersihan memori paksa
+            collectgarbage("collect")
+        end)
+    else
+        FpsBtn.Text = "FPS BOOSTER : OFF"
+        FpsBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    end
+end)
+
+ResetGfxBtn.MouseButton1Click:Connect(function()
+    isFpsBoostActive = false
+    FpsBtn.Text = "FPS BOOSTER : OFF"
+    FpsBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    
+    pcall(function()
+        local lighting = Lighting
+        local terrain = workspace:FindFirstChildOfClass("Terrain")
+        
+        if terrain then
+            terrain.WaterWaveSize = 0.15
+            terrain.WaterWaveSpeed = 8
+            terrain.WaterReflectance = 1
+            terrain.WaterTransparency = 0.8
+        end
+        
+        lighting.GlobalShadows = true
+        lighting.FogEnd = 100000
+        
+        for _, v in ipairs(lighting:GetChildren()) do
+            if v:IsA("PostEffect") or v:IsA("Sky") or v:IsA("Atmosphere") or v:IsA("BlurEffect") or v:IsA("SunRaysEffect") or v:IsA("ColorCorrectionEffect") then
+                v.Enabled = true
+            end
+        end
+        
+        for _, v in ipairs(workspace:GetDescendants()) do
+            if v:IsA("Decal") or v:IsA("Texture") then
+                v.Transparency = 0
+            elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") or v:IsA("Beam") then
+                v.Enabled = true
+            end
+        end
+    end)
+end)
+
+local function executeCast()
+    pcall(function()
+        local currentRod = LocalPlayer.Character and (LocalPlayer.Character:FindFirstChild("Starter Rod") or LocalPlayer.Character:FindFirstChildOfClass("Tool"))
+        if currentRod and currentRod:FindFirstChild("Mechanics") then
+            local castEvent = currentRod.Mechanics.Remotes:FindFirstChild("CastEvent")
+            if castEvent then 
+                castEvent:FireServer(false, 100, nil) 
+            end
+            
+            local tandaSeru = ReplicatedStorage:FindFirstChild("TandaSeruBersama")
+            if tandaSeru then
+                tandaSeru:FireServer(
+                    Color3.new(0.33333334326744, 0.63529413938522, 1),
+                    Color3.new(0.078431375324726, 0.078431375324726, 0.078431375324726),
+                    ColorSequence.new({
+                        ColorSequenceKeypoint.new(0, Color3.new(0.33333334326744, 0.63529413938522, 1)),
+                        ColorSequenceKeypoint.new(1, Color3.new(0.33333334326744, 0.63529413938522, 1))
+                    }),
+                    1.5
+                )
+            end
+        end
+    end)
+end
+
+local isAutoFishing = false
+
+ToggleButton.MouseButton1Click:Connect(function()
+    isAutoFishing = not isAutoFishing
+    
+    if isAutoFishing then
+        ToggleButton.Text = "AUTO FISH : ON"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(39, 201, 63)
+        
+        task.spawn(function()
+            local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            local rod = char:FindFirstChild("Starter Rod") or char:FindFirstChildOfClass("Tool")
+            if rod and rod:FindFirstChild("Mechanics") then
+                local miniGame = rod.Mechanics.Remotes:FindFirstChild("MiniGame")
+                if miniGame then
+                    miniGame.OnClientEvent:Connect(function()
+                        if isAutoFishing then
+                            task.wait(0.6)
+                            miniGame:FireServer(true)
+                        end
+                    end)
+                end
+            end
+        end)
+        
+        task.spawn(function()
+            while isAutoFishing do
+                executeCast()
+                task.wait(0.8)
+            end
+        end)
+        
+    else
+        ToggleButton.Text = "AUTO FISH : OFF"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    end
+end)

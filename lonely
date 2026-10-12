@@ -1,0 +1,195 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+if CoreGui:FindFirstChild("MacOS_FishingGUI") then
+    CoreGui.MacOS_FishingGUI:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "MacOS_FishingGUI"
+ScreenGui.Parent = CoreGui
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 300, 0, 150)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = MainFrame
+
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Size = UDim2.new(1, 0, 0, 30)
+TopBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = MainFrame
+
+local TopBarCorner = Instance.new("UICorner")
+TopBarCorner.CornerRadius = UDim.new(0, 10)
+TopBarCorner.Parent = TopBar
+
+local TopBarFix = Instance.new("Frame")
+TopBarFix.Size = UDim2.new(1, 0, 0, 10)
+TopBarFix.Position = UDim2.new(0, 0, 1, -10)
+TopBarFix.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+TopBarFix.BorderSizePixel = 0
+TopBarFix.Parent = TopBar
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 1, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "Mount Lonely"
+Title.TextColor3 = Color3.fromRGB(200, 200, 200)
+Title.Font = Enum.Font.GothamSemibold
+Title.TextSize = 12
+Title.Parent = TopBar
+
+local function createTrafficLight(name, color, posX)
+    local btn = Instance.new("TextButton")
+    btn.Name = name
+    btn.Size = UDim2.new(0, 12, 0, 12)
+    btn.Position = UDim2.new(0, posX, 0.5, -6)
+    btn.BackgroundColor3 = color
+    btn.Text = ""
+    btn.Parent = TopBar
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = btn
+    return btn
+end
+
+local CloseBtn = createTrafficLight("CloseBtn", Color3.fromRGB(255, 95, 86), 10)
+local MinBtn = createTrafficLight("MinBtn", Color3.fromRGB(255, 189, 46), 27)
+local MaxBtn = createTrafficLight("MaxBtn", Color3.fromRGB(39, 201, 63), 44)
+
+local autoFishing = false
+CloseBtn.MouseButton1Click:Connect(function() 
+    autoFishing = false
+    ScreenGui:Destroy() 
+end)
+
+local FishButton = Instance.new("TextButton")
+FishButton.Size = UDim2.new(0, 200, 0, 40)
+FishButton.Position = UDim2.new(0.5, -100, 0.5, 10)
+FishButton.BackgroundColor3 = Color3.fromRGB(0, 122, 255)
+FishButton.Text = "Start AutoFarm"
+FishButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FishButton.Font = Enum.Font.GothamBold
+FishButton.TextSize = 14
+FishButton.Parent = MainFrame
+
+local BtnCorner = Instance.new("UICorner")
+BtnCorner.CornerRadius = UDim.new(0, 8)
+BtnCorner.Parent = FishButton
+
+local dragging, dragInput, dragStart, startPos
+TopBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true; dragStart = input.Position; startPos = MainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+TopBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+local function GetWaterSurfaceY(x, z, playerY)
+    local origin = Vector3.new(x, playerY + 200, z)
+    local rayParams = RaycastParams.new()
+    rayParams.IgnoreWater = false
+    rayParams.FilterType = Enum.RaycastFilterType.Include
+    rayParams.FilterDescendantsInstances = { workspace.Terrain }
+    
+    local result = workspace:Raycast(origin, Vector3.new(0, -400, 0), rayParams)
+    if result and result.Material == Enum.Material.Water then
+        return result.Position.Y
+    else
+        return nil 
+    end
+end
+
+FishButton.MouseButton1Click:Connect(function()
+    autoFishing = not autoFishing 
+
+    if autoFishing then
+        FishButton.Text = "Stop AutoFarm"
+        FishButton.BackgroundColor3 = Color3.fromRGB(255, 59, 48) 
+        
+        task.spawn(function()
+            local FishingSystem = ReplicatedStorage:WaitForChild("FishingSystem")
+            
+            while autoFishing do
+                local character = LocalPlayer.Character
+                if not character or not character:FindFirstChild("HumanoidRootPart") then 
+                    task.wait(1); continue 
+                end
+
+                local hrp = character.HumanoidRootPart
+                
+                local tool = character:FindFirstChildOfClass("Tool")
+                if not tool then
+                    FishButton.Text = "Equip Rod!"
+                    task.wait(2)
+                    if autoFishing then FishButton.Text = "Stop AutoFarm" end
+                    continue
+                end
+                
+                local rodName = tool.Name
+                local lookVec = hrp.CFrame.LookVector
+                local baseForward = hrp.Position + (lookVec * 15)
+                local waterY = GetWaterSurfaceY(baseForward.X, baseForward.Z, hrp.Position.Y)
+                
+                if not waterY then
+                    FishButton.Text = "Face the Water!"
+                    task.wait(2)
+                    if autoFishing then FishButton.Text = "Stop AutoFarm" end
+                    continue
+                end
+
+                local hookPos = Vector3.new(baseForward.X, waterY, baseForward.Z)
+                local castPos = hrp.Position + Vector3.new(0, 3, 0)
+                
+                local castPower = 95
+                local v51 = (castPower / 100) * 30
+                local v52 = math.clamp(v51, 8, 30)
+                local v53 = v52 / 25
+                local v54 = v52 / math.max(v53, 0.5)
+                local castVelocity = Vector3.new(lookVec.X * v54, 5, lookVec.Z * v54)
+
+                local hookData = { hookPosition = hookPos, power = 1 }
+
+                FishingSystem.CastReplication:FireServer(castPos, castVelocity, rodName, castPower)
+
+                task.wait(1)
+                if not autoFishing then break end
+
+                FishingSystem.MinigameStarted:FireServer(hookData)
+
+                task.wait(2.6)
+                if not autoFishing then break end
+
+                FishingSystem.CleanupCast:FireServer()
+                FishingSystem.FishGiver:FireServer(hookData)
+                
+            end
+        end)
+    else
+        FishButton.Text = "Start AutoFarm"
+        FishButton.BackgroundColor3 = Color3.fromRGB(0, 122, 255)
+    end
+end)
