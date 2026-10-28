@@ -440,6 +440,7 @@ local function executeCast()
         if currentRod and currentRod:FindFirstChild("Mechanics") then
             local castEvent = currentRod.Mechanics.Remotes:FindFirstChild("CastEvent")
             if castEvent then 
+                castEvent:FireServer(true)
                 castEvent:FireServer(false, 100, nil) 
             end
             
