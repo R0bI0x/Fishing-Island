@@ -1,0 +1,232 @@
+-- Layanan Roblox --
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Hapus GUI lama jika ada agar tidak menumpuk --
+if PlayerGui:FindFirstChild("FullAutoPumpkinGui") then
+    PlayerGui.FullAutoPumpkinGui:Destroy()
+end
+
+-- Membuat ScreenGui Utama --
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "FullAutoPumpkinGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = PlayerGui
+
+-- Membuat Main Frame (Panel Menu) --
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 260, 0, 300)
+MainFrame.Position = UDim2.new(0.1, 0, 0.2, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = MainFrame
+
+-- Judul GUI --
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, 0, 0, 45)
+TitleLabel.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
+TitleLabel.Text = "Pumpkin & Server Hop"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextSize = 13
+TitleLabel.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 12)
+TitleCorner.Parent = TitleLabel
+
+-- Tombol 1: Teleport Sekali ke ._LabuAktif --
+local TpOnceBtn = Instance.new("TextButton")
+TpOnceBtn.Size = UDim2.new(1, -20, 0, 38)
+TpOnceBtn.Position = UDim2.new(0, 10, 0, 55)
+TpOnceBtn.BackgroundColor3 = Color3.fromRGB(150, 40, 200)
+TpOnceBtn.Text = "Teleport Sekali (._LabuAktif)"
+TpOnceBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+TpOnceBtn.Font = Enum.Font.GothamBold
+TpOnceBtn.TextSize = 12
+TpOnceBtn.Parent = MainFrame
+Instance.new("UICorner", TpOnceBtn).CornerRadius = UDim.new(0, 8)
+
+-- Indikator Status Auto Farm (Tombol Toggle Manual) --
+local AutoTpBtn = Instance.new("TextButton")
+AutoTpBtn.Size = UDim2.new(1, -20, 0, 38)
+AutoTpBtn.Position = UDim2.new(0, 10, 0, 100)
+AutoTpBtn.BackgroundColor3 = Color3.fromRGB(206, 32, 41)
+AutoTpBtn.Text = "Auto Farm TP Labu: ON"
+AutoTpBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoTpBtn.Font = Enum.Font.GothamBold
+AutoTpBtn.TextSize = 12
+AutoTpBtn.Parent = MainFrame
+Instance.new("UICorner", AutoTpBtn).CornerRadius = UDim.new(0, 8)
+
+-- Tombol 3: Server Hop Sekarang --
+local HopBtn = Instance.new("TextButton")
+HopBtn.Size = UDim2.new(1, -20, 0, 38)
+HopBtn.Position = UDim2.new(0, 10, 0, 145)
+HopBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+HopBtn.Text = "Server Hop Sekarang"
+HopBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+HopBtn.Font = Enum.Font.GothamBold
+HopBtn.TextSize = 12
+HopBtn.Parent = MainFrame
+Instance.new("UICorner", HopBtn).CornerRadius = UDim.new(0, 8)
+
+-- Status / Notifikasi Label --
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(1, -20, 0, 65)
+StatusLabel.Position = UDim2.new(0, 10, 0, 195)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = "Status: Auto Farm Langsung Aktif"
+StatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.TextSize = 11
+StatusLabel.TextWrapped = true
+StatusLabel.Parent = MainFrame
+
+-- ==================== FUNGSI UTAMA ==================== --
+
+-- Fungsi Deteksi Objek `._LabuAktif`
+local function FindPumpkinObject()
+    local targetCFrame = nil
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj.Name == "._LabuAktif" or obj.Name:lower():find("labuaktif") then
+            if obj:IsA("BasePart") then
+                targetCFrame = obj.CFrame
+                break
+            elseif obj:IsA("Model") then
+                targetCFrame = obj:GetPivot()
+                break
+            elseif obj:IsA("Folder") then
+                for _, child in ipairs(obj:GetDescendants()) do
+                    if child:IsA("BasePart") then
+                        targetCFrame = child.CFrame
+                        break
+                    elseif child:IsA("Model") then
+                        targetCFrame = child:GetPivot()
+                        break
+                    end
+                end
+                if targetCFrame then break end
+            end
+        end
+    end
+    return targetCFrame
+end
+
+-- Fungsi Teleport
+local function TeleportToPumpkin()
+    local character = LocalPlayer.Character
+    if not character then return false end
+
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character:FindFirstChild("Humanoid")
+    
+    if not hrp or not humanoid or humanoid.Health <= 0 then return false end
+
+    local pumpkinCFrame = FindPumpkinObject()
+    if pumpkinCFrame then
+        hrp.CFrame = pumpkinCFrame + Vector3.new(0, 3, 0)
+        hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+        StatusLabel.Text = "Status: Sukses TP ke ._LabuAktif"
+        return true
+    end
+    return false
+end
+
+TpOnceBtn.MouseButton1Click:Connect(function()
+    local success = TeleportToPumpkin()
+    if not success then
+        StatusLabel.Text = "Status: ._LabuAktif tidak ditemukan"
+    end
+end)
+
+-- Fungsi Auto Server Hop (Pindah Server Otomatis)
+local function ServerHop()
+    StatusLabel.Text = "Status: Mencari server lain..."
+    
+    pcall(function()
+        if queue_on_teleport then
+            queue_on_teleport([[
+                task.wait(3)
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/R0bI0x/Fishing-Island/refs/heads/main/lonelypumpkin"))()
+            ]])
+        end
+    end)
+
+    local success, err = pcall(function()
+        local servers = {}
+        local req = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/public?sortOrder=Asc&limit=100"))
+        if req and req.data then
+            for _, s in ipairs(req.data) do
+                if type(s) == "table" and s.maxPlayers and s.playing and s.playing < s.maxPlayers and s.id ~= game.JobId then
+                    table.insert(servers, s.id)
+                end
+            end
+        end
+        if #servers > 0 then
+            local randomServer = servers[math.random(1, #servers)]
+            StatusLabel.Text = "Status: Berpindah server..."
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, randomServer, LocalPlayer)
+        else
+            StatusLabel.Text = "Status: Gagal menemukan server kosong, mencoba lagi..."
+        end
+    end)
+    if not success then
+        warn(err)
+    end
+end
+
+HopBtn.MouseButton1Click:Connect(ServerHop)
+
+-- AUTO FARM TP LANGSUNG AKTIF (DEFAULT ON)
+local isAutoTpActive = true
+
+task.spawn(function()
+    local missingCount = 0
+    while true do
+        if isAutoTpActive then
+            pcall(function()
+                local found = TeleportToPumpkin()
+                if found then
+                    missingCount = 0
+                else
+                    missingCount = missingCount + 1
+                    StatusLabel.Text = "Status: Labu tidak ada (" .. missingCount .. "/5)"
+                    if missingCount >= 5 then
+                        StatusLabel.Text = "Status: Labu habis, melakukan Server Hop..."
+                        task.wait(1)
+                        ServerHop()
+                    end
+                end
+            end)
+        end
+        task.wait(2)
+    end
+end)
+
+-- Tombol Toggle untuk mematikan/menyalakan manual
+AutoTpBtn.MouseButton1Click:Connect(function()
+    isAutoTpActive = not isAutoTpActive
+    if isAutoTpActive then
+        AutoTpBtn.BackgroundColor3 = Color3.fromRGB(206, 32, 41)
+        AutoTpBtn.Text = "Auto Farm TP Labu: ON"
+        StatusLabel.Text = "Status: Auto Farm TP diaktifkan kembali"
+    else
+        AutoTpBtn.BackgroundColor3 = Color3.fromRGB(30, 140, 60)
+        AutoTpBtn.Text = "Auto Farm TP Labu: OFF"
+        StatusLabel.Text = "Status: Auto Farm TP dimatikan"
+    end
+end)
